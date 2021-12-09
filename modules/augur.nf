@@ -1,0 +1,176 @@
+#! /usr/bin/env nextflow
+
+nextflow.enable.dsl=2
+
+process index {
+    input: path(sequences)
+    output: tuple path("$sequences"), path("${sequence.simpleName}_index.tsv")
+    script:
+    """
+    #! /usr/bin/env bash
+    ${augur_app} index \
+      --sequences ${sequences} \
+      --output ${sequence.simpleName}_index.tsv
+    """
+    stub:
+    """
+    touch ${sequences.simpleName}_index.tsv
+    """
+}
+
+process filter {
+    input: tuple path(sequences), path(sequence_index), path(metadata), path(exclude)
+    output: path("${sequences.simpleName}_filtered.fasta")
+    script:
+    """
+    ${augur_app} filter \
+        --sequences ${sequences} \
+        --sequence-index ${sequence_index} \
+        --metadata ${metadata} \
+        --exclude ${exclude} \
+        --output ${sequences.simpleName}_filtered.fasta \
+        --group-by country year month \
+        --sequences-per-group 20 \
+        --min-date 2012
+    """
+    stub:
+    """
+    touch "${sequences.simpleName}_filtered.fasta"
+    """
+}
+
+process align {
+    input: tuple path(filtered), path(reference)
+    output: path("${filtered.simpleName}_aligned.fasta")
+    script:
+    """
+    ${augur_app} align \
+        --sequences ${filtered} \
+        --reference-sequence ${reference} \
+        --output ${filtered.simpleName}_aligned.fasta \
+        --fill-gaps
+    """
+    stub:
+    """
+    touch ${filtered.simpleName}_aligned.fasta
+    """
+
+}
+
+process tree {
+    input: path(aligned)
+    output: path("${aligned.simpleName}_raw.nwk")
+    script:
+    """
+    ${augur_app} tree \
+        --alignment ${aligned} \
+        --output ${aligned.simpleName}.nwk
+    """
+    stub:
+    """
+    touch ${aligned.simpleName}_raw.nwk
+    """
+}
+
+process refine {
+    input: tuple path(tree_raw), path(aligned), path(metadata)
+    output: tuple path("${tree_raw.simpleName.replace('_raw',''')}.nwk"), path("branch_lengths.json")
+    script:
+    """
+    ${augur_app} refine \
+        --tree ${tree_raw} \
+        --alignment ${aligned} \
+        --metadata ${metadata} \
+        --output-tree ${tree_raw.simpleName.replace('_raw',''')}.nwk\
+        --output-node-data ${tree_raw.simpleName.replace('_raw','')}_branch_lengths.json \
+        --timetree \
+        --coalescent opt \
+        --date-confidence \
+        --date-inference marginal \
+        --clock-filter-iqd 4
+    """
+    stub:
+    """
+    touch ${tree_raw.simpleName.replace('_raw','')}.nwk ${tree_raw.simpleName.replace('_raw','')}_branch_lengths.json
+    """
+}
+
+process ancestral {
+    input: tuple path(tree), path(aligned)
+    output: path("nt_muts.json")
+    script:
+    """
+    ${augur_app} ancestral \
+        --tree ${tree} \
+        --alignment ${aligned} \
+        --output-node-data ${tree.simpleName}_nt_muts.json \
+        --inference joint
+    """
+    stub:
+    """
+    touch ${tree.simpleName}_nt_muts.json
+    """
+}
+
+process translate {
+    input: tuple path(tree), path(nt_muts), path(reference)
+    output: path("aa_muts.json")
+    script:
+    """
+    ${augur_app} translate \
+        --tree ${tree} \
+        --ancestral-sequences ${nt_muts} \
+        --reference-sequence ${reference} \
+        --output-node-data ${tree.simpleName}_aa_muts.json
+    """
+    stub:
+    """
+    ${tree.simpleName}_aa_muts.json
+    """
+
+}
+
+process traits {
+    input: tuple path(tree), path(metadata)
+    output: path("traits.json")
+    script:
+    """
+    ${augur_app} traits \
+        --tree ${tree} \
+        --metadata ${metadata} \
+        --output ${tree.simpleName}_traits.json \
+        --columns region country \
+        --confidence
+    """
+    stub:
+    """
+    ${tree.simpleName}_traits.json
+    """
+}
+
+// To make this general purpose, just take a collection of json files, don't split it out
+process export {
+    publishDir("$params.outdir")
+    input: tuple path(tree), path(metadata), path(branch_lengths), \
+      path(traits), path(nt_muts), path(aa_muts), path(colors), \
+      path(lat_longs), path(auspice_config)
+    output: path("auspice/${tree.simpleName}.json")
+    script:
+    """
+    ${augur_app} export v2 \
+        --tree ${tree} \
+        --metadata ${metadata} \
+        --node-data ${branch_lengths} \
+                    ${traits} \
+                    ${nt_muts} \
+                    ${aa_muts} \
+        --colors ${colors} \
+        --lat-longs ${lat_longs} \
+        --auspice-config ${auspice_config} \
+        --output auspice/${tree.simpleName}.json
+    """
+    stub:
+    """
+    touch auspice/${tree.simpleName}.json
+    """
+}

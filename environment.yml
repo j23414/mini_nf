@@ -1,0 +1,25 @@
+# Modified from https://github.com/corneliusroemer/ncov-simplest/blob/main/conda_env.yaml
+name: nextstrain_nf
+channels:
+  - bioconda
+  - conda-forge
+  - defaults
+dependencies:
+  - augur
+  - bcbio-gff
+  - biopython
+  - boto3
+  - botocore
+  - click
+  - curl
+  - nextclade
+  - nextstrain-cli
+  - numpy
+  - pandas
+  - pip
+  - snakemake
+  - snakemake-minimal
+  - xz
+  - pip:
+    - awscli
+    - epiweeks
