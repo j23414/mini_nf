@@ -4,13 +4,13 @@ nextflow.enable.dsl=2
 
 process index {
     input: path(sequences)
-    output: tuple path("$sequences"), path("${sequence.simpleName}_index.tsv")
+    output: tuple path("$sequences"), path("${sequences.simpleName}_index.tsv")
     script:
     """
     #! /usr/bin/env bash
     ${augur_app} index \
       --sequences ${sequences} \
-      --output ${sequence.simpleName}_index.tsv
+      --output ${sequences.simpleName}_index.tsv
     """
     stub:
     """
@@ -18,6 +18,7 @@ process index {
     """
 }
 
+// TODO: split into filter with and without index files
 process filter {
     input: tuple path(sequences), path(sequence_index), path(metadata), path(exclude)
     output: path("${sequences.simpleName}_filtered.fasta")
@@ -64,7 +65,7 @@ process tree {
     """
     ${augur_app} tree \
         --alignment ${aligned} \
-        --output ${aligned.simpleName}.nwk
+        --output ${aligned.simpleName}_raw.nwk
     """
     stub:
     """
@@ -74,14 +75,14 @@ process tree {
 
 process refine {
     input: tuple path(tree_raw), path(aligned), path(metadata)
-    output: tuple path("${tree_raw.simpleName.replace('_raw',''')}.nwk"), path("branch_lengths.json")
+    output: tuple path("${tree_raw.simpleName.replace('_raw','')}.nwk"), path("${tree_raw.simpleName.replace('_raw','')}_branch_lengths.json")
     script:
     """
     ${augur_app} refine \
         --tree ${tree_raw} \
         --alignment ${aligned} \
         --metadata ${metadata} \
-        --output-tree ${tree_raw.simpleName.replace('_raw',''')}.nwk\
+        --output-tree ${tree_raw.simpleName.replace('_raw','')}.nwk \
         --output-node-data ${tree_raw.simpleName.replace('_raw','')}_branch_lengths.json \
         --timetree \
         --coalescent opt \
@@ -97,7 +98,7 @@ process refine {
 
 process ancestral {
     input: tuple path(tree), path(aligned)
-    output: path("nt_muts.json")
+    output: path("${tree.simpleName}_nt_muts.json")
     script:
     """
     ${augur_app} ancestral \
@@ -114,7 +115,7 @@ process ancestral {
 
 process translate {
     input: tuple path(tree), path(nt_muts), path(reference)
-    output: path("aa_muts.json")
+    output: path("${tree.simpleName}_aa_muts.json")
     script:
     """
     ${augur_app} translate \
@@ -125,14 +126,14 @@ process translate {
     """
     stub:
     """
-    ${tree.simpleName}_aa_muts.json
+    touch ${tree.simpleName}_aa_muts.json
     """
 
 }
 
 process traits {
     input: tuple path(tree), path(metadata)
-    output: path("traits.json")
+    output: path("${tree.simpleName}_traits.json")
     script:
     """
     ${augur_app} traits \
@@ -144,7 +145,7 @@ process traits {
     """
     stub:
     """
-    ${tree.simpleName}_traits.json
+    touch ${tree.simpleName}_traits.json
     """
 }
 
@@ -171,6 +172,20 @@ process export {
     """
     stub:
     """
+    mkdir auspice
     touch auspice/${tree.simpleName}.json
     """
 }
+
+// TODO: other Augur commands
+// process parse { }
+// process mask { }
+// process reconstruct-sequences { }
+// process clade { }
+// process sequence-traits { }
+// process lbi { }
+// process distance { }
+// process titers { }
+// process frequences { }
+// process validate { }
+// process import { }

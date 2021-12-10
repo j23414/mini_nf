@@ -14,3 +14,7 @@ process run_nextstrain {
   touch ${infile.simpleName}_out.txt
   """
 }
+
+// TODO: take input channel create Snakefile and build.yml for nextstrain build
+// process write_Snakefile { }
+// process write_buildyml { }

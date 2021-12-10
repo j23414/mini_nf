@@ -16,6 +16,8 @@ jobs:
           curl -s https://get.nextflow.io | bash
           ./nextflow -version
       
-      # Hope this runs after the previous step...
-      - name: run nextflow test
+      - name: run nextflow test for each module
         run: ./nextflow run main.nf -stub-run
+      
+      - name: run nextflow test for one wrapped module
+        run: ./nextflow run main.nf -stub-run --wrap
