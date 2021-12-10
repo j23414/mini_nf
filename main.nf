@@ -7,6 +7,7 @@ include { run_nextstrain } from './modules/nextstrain.nf'
 
 // Wrap individual modules in Nextflow
 include {index; filter; align; tree; refine; ancestral; translate; traits; export } from './modules/augur.nf'
+include { nextclade_sars_cov_2 as nextclade } from './modules/nextclade.nf'
 
 workflow {
   // Define input channels (could auto detect if input is gisaid auspice json file)
@@ -22,6 +23,10 @@ workflow {
   // TODO: sub args passed as json/dict
   // TODO: allow skipping of steps (snakemake skips via named input)
 
+  /* ========= Nextclade (works) ======= */
+  clades_ch  = seq_ch | nextclade
+
+  /* ========= Nextstrain (modules work) ======== */
   if (params.wrap) {  // Fast wrapped route
     seq_ch | run_nextstrain
   } else {           // Slow module route
