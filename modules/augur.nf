@@ -151,7 +151,7 @@ process traits {
 
 // To make this general purpose, just take a collection of json files, don't split it out
 process export {
-    publishDir("$params.outdir")
+    publishDir("$params.outdir"), mode: 'copy'
     input: tuple path(tree), path(metadata), path(branch_lengths), \
       path(traits), path(nt_muts), path(aa_muts), path(colors), \
       path(lat_longs), path(auspice_config)

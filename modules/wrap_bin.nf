@@ -3,6 +3,7 @@
 nextflow.enable.dsl=2
 
 process batchfetchGB {
+    publishDir "${params.outdir}/00_PrepData", mode: 'copy'
     input: path(gb_ids)
     output: path("${gb_ids.simpleName}.gb")
     script:
@@ -13,6 +14,21 @@ process batchfetchGB {
     stub:
     """
     touch ${gb_ids.simpleName}.gb
+    """
+}
+
+process gb_to_fna {
+    publishDir "${params.outdir}/00_PrepData", mode: 'copy'
+    input: path(gb)
+    output: path("${gb.simpleName}.fna")
+    script:
+    """
+    #! /usr/bin/env bash
+    procGenbank.pl ${gb} > ${gb.simpleName}.fna
+    """
+    stub:
+    """
+    touch ${gb.simpleName}.fna
     """
 }
 

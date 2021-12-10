@@ -2,14 +2,26 @@
 
 nextflow.enable.dsl=2
 
-// process nextalign {
-//     script:
-//     """
-//     nextalign \
-//       --sequences=sequences.fasta \
-//       --reference=reference.fasta \
-//       --genemap=genemap.gff \
-//       --genes=E,M,N,ORF1a,ORF1b,ORF3a,ORF6,ORF7a,ORF7b,ORF8,ORF9b,S \
-//       --output-dir=output/ \--output-basename=nextalign
-//     """
-// }
+process nextalign {
+  publishDir "${params.outdir}/01_nextalign", mode: 'copy'
+  input: tuple path(sequences), path(reference), path(gff)
+  output: path("nextalign")
+  script:
+  """
+  #! /usr/bin/env bash
+  # Pull gene names from gff file
+  GENES=`cat ${gff} | awk -F'gene_name=' '{print \$2}' |grep -v "^\$"|tr '\n' ','|sed 's/,\$//g'`
+  ${nextalign_app} \
+    --sequences=${sequences} \
+    --reference=${reference} \
+    --genemap=${gff} \
+    --genes=\${GENES} \
+    --output-dir=nextalign/ \
+    --output-basename=${sequences.simpleName}
+  """
+  stub:
+  """
+  mkdir nextalign
+  touch nextalign/${sequences.simpleName}_aln.fasta
+  """
+}

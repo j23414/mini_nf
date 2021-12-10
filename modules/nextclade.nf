@@ -6,6 +6,7 @@ nextflow.enable.dsl=2
 
 // Given a dataset name, return nextclade dataset folder
 process dataset_get {
+  publishDir "${params.outdir}/01_Nextclade", mode: 'copy'
   input: val(dataset_name)
   output: path("${dataset_name}")
   script:
@@ -22,6 +23,7 @@ process dataset_get {
 
 // Given a dataset and a query, return a folder of clades
 process nextclade_run {  // run is nextflow reserved word
+  publishDir "${params.outdir}/01_Nextclade", mode: 'copy'
   input: tuple path(dataset), path(query)
   output: path("${query.simpleName}_clades")  
   script:
