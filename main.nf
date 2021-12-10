@@ -3,7 +3,7 @@
 nextflow.enable.dsl=2
 
 // Wrap everything in nextflow
-include { run_nextstrain } from './modules/run_all.nf'
+include { run_nextstrain } from './modules/nextstrain.nf'
 
 // Wrap individual modules in Nextflow
 include {index; filter; align; tree; refine; ancestral; translate; traits; export } from './modules/augur.nf'
@@ -20,6 +20,7 @@ workflow {
 
   // == main
   // TODO: sub args passed as json/dict
+  // TODO: allow skipping of steps (snakemake skips via named input)
 
   if (params.wrap) {  // Fast wrapped route
     seq_ch | run_nextstrain
