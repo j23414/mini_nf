@@ -1,4 +1,5 @@
 #! /usr/bin/env nextflow
+// import org.yaml.snakeyaml.Yaml
 
 nextflow.enable.dsl=2
 
@@ -12,6 +13,14 @@ include { nextalign } from './modules/nextalign.nf'
 include { batchfetchGB as pull_genbanks ; gb_to_fna as convert_to_fasta} from './modules/wrap_bin.nf'
 
 workflow {
+/* TODO: read native snakemake yaml
+  if (params.yaml) {
+    parameter_yaml = new FileInputStream(new File(params.yaml))
+    new Yaml().load(parameter_yaml).each { k, v -> params[k] = v }
+    params[sequences] = params.input.sequences ? "${params.input.sequences}" : "${params.sequence}"
+  }
+*/
+
   // Define input channels (could auto detect if input is gisaid auspice json file)
   gb_ch = Channel.fromPath(params.genbank_ids, checkIfExists:true)
   seq_ch = gb_ch | pull_genbanks | convert_to_fasta
