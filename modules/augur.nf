@@ -3,6 +3,7 @@
 nextflow.enable.dsl=2
 
 process index {
+    label 'nextstrain'
     input: path(sequences)
     output: tuple path("$sequences"), path("${sequences.simpleName}_index.tsv")
     script:
@@ -20,6 +21,7 @@ process index {
 
 // TODO: split into filter with and without index files
 process filter {
+    label 'nextstrain'
     input: tuple path(sequences), path(sequence_index), path(metadata), path(exclude)
     output: path("${sequences.simpleName}_filtered.fasta")
     script:
@@ -41,6 +43,7 @@ process filter {
 }
 
 process align {
+    label 'nextstrain'
     input: tuple path(filtered), path(reference)
     output: path("${filtered.simpleName}_aligned.fasta")
     script:
@@ -59,6 +62,7 @@ process align {
 }
 
 process tree {
+    label 'nextstrain'
     input: path(aligned)
     output: path("${aligned.simpleName}_raw.nwk")
     script:
@@ -74,6 +78,7 @@ process tree {
 }
 
 process refine {
+    label 'nextstrain'
     input: tuple path(tree_raw), path(aligned), path(metadata)
     output: tuple path("${tree_raw.simpleName.replace('_raw','')}.nwk"), path("${tree_raw.simpleName.replace('_raw','')}_branch_lengths.json")
     script:
@@ -97,6 +102,7 @@ process refine {
 }
 
 process ancestral {
+    label 'nextstrain'
     input: tuple path(tree), path(aligned)
     output: path("${tree.simpleName}_nt_muts.json")
     script:
@@ -114,6 +120,7 @@ process ancestral {
 }
 
 process translate {
+    label 'nextstrain'
     input: tuple path(tree), path(nt_muts), path(reference)
     output: path("${tree.simpleName}_aa_muts.json")
     script:
@@ -132,6 +139,7 @@ process translate {
 }
 
 process traits {
+    label 'nextstrain'
     input: tuple path(tree), path(metadata)
     output: path("${tree.simpleName}_traits.json")
     script:
@@ -151,6 +159,7 @@ process traits {
 
 // To make this general purpose, just take a collection of json files, don't split it out
 process export {
+    label 'nextstrain'
     publishDir("$params.outdir"), mode: 'copy'
     input: tuple path(tree), path(metadata), path(branch_lengths), \
       path(traits), path(nt_muts), path(aa_muts), path(colors), \
