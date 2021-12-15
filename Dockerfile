@@ -1,11 +1,13 @@
-FROM mambaorg/micromamba
+FROM mambaorg/micromamba:0.19.1
+USER root
+COPY --chown=micromamba:micromamba environment.yml /tmp/env.yaml
+RUN apt-get update
+RUN apt-get install -y git curl python3-pip
+RUN micromamba env create -y -f /tmp/env.yaml && \
+    micromamba clean --all --yes
+RUN ln -s /bin/micromamba /bin/conda
 
-# === Update installers
-RUN apt-get update && apt-get install -y git
-RUN apt-get install -y curl && apt-get install -y python3-pip
+ARG MAMBA_DOCKERFILE_ACTIVATE=1 
 
-# === Pull repo
-RUN git clone https://github.com/j23414/mini_nf
-
-# === install any conda packages
-RUN cd mini_nf; mamba env create -f environment.yml
+RUN echo "micromamba activate nextstrain_nf" >> ~/.bashrc
+SHELL ["/bin/bash", "--login", "-c"]
