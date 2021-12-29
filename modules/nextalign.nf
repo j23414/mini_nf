@@ -1,4 +1,5 @@
 #! /usr/bin/env nextflow
+/* You probably want to use nextclade */
 
 nextflow.enable.dsl=2
 
@@ -24,4 +25,15 @@ process nextalign {
   mkdir nextalign
   touch nextalign/${sequences.simpleName}_aln.fasta
   """
+}
+
+workflow nextalign_example_pipe {
+  take:
+    seq_ch
+    ref_fa_ch
+    gff_ch
+  main:
+    seq_ch | combine(ref_fa_ch) | combine(gff_ch) | nextalign 
+  emit:
+    nextalign.out
 }

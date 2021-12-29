@@ -19,7 +19,7 @@ def add_json_params(json_file, new_dict):
         params[i] = new_dict[i]
     
     with open(json_file, 'w') as outfile:
-        json.dump(params, outfile)
+        json.dump(params, outfile, indent=2)
 
 # Def: json, json -> json (add 2nd json to 1st json file)
 def merge_json_params(json_file, json_file2):
@@ -33,12 +33,12 @@ def merge_json_params(json_file, json_file2):
         params[i] = params2[i]
     
     with open(json_file, 'w') as outfile:
-        json.dump(params, outfile)
+        json.dump(params, outfile, indent=2)
 
 # Def: dict -> json
 def dict_json(new_dict, json_file = "newparams.json"):
     with open(json_file, 'w') as outfile:
-        json.dump(new_dict, outfile)
+        json.dump(new_dict, outfile, indent=2)
 
 def main():
     json_paramstr('config.json')
