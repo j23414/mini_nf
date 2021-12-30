@@ -96,3 +96,37 @@ docker build . -t ncov_doc # Assume Dockerfile in current directory
 # Interactive session
 docker run -it ncov_doc
 ```
+
+## Debug notes
+
+Nextflow creates a `work` directory where it stores cached intermediate files and scripts. Each hashed directory matches the hash in the print out field (e.g. `fa/60fdb1`) so you can check inputfile scope for each process. Less likely to have filename collisions.
+
+```
+$ nextflow run main.nf --input_dir zika-tutorial
+N E X T F L O W  ~  version 21.10.6
+Launching `main.nf` [scruffy_cajal] - revision: ae2b2117f5
+executor >  local (1)
+[fa/60fdb1] process > nextstrain_build (1) [100%] 1 of 1 ✔
+WARN: Task runtime metrics are not reported when using macOS without a container engine
+
+$ find work/
+work/
+  |_ conda/          # <= if you use -profile conda, stores env
+  |_ singularity/    # <= if you use -profile singularity, stores imgs
+  |
+  |_ fa/
+    |_ f60fdb1c0a50c25844caab3be389369/
+      |_ zika-tutorial/       #<= input
+      |  |_ auspice/          #<= output
+      |  |_ results/
+      |
+      |_ .command.sh
+      |_ .command.begin
+      |_ .command.run
+      |_ .exitcode
+      |_ .command.log
+      |_ .command.trace
+      |
+      |_ .command.err        #<= check these files to debug
+      |_ .command.out
+```
