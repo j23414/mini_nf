@@ -8,7 +8,7 @@ if len(sys.argv) > 1:
     key = ""
     myparams = {}
     for t in sys.argv:
-        if t.startswith("--"):
+        if t.startswith("-"):
             if (len(key)>0):
                 myparams[key]=val.strip()
             
@@ -20,6 +20,5 @@ if len(sys.argv) > 1:
     if (len(val)>0):
         myparams[key]=val.strip()
     
-    print(myparams)
     with open('tmp_params.json', 'w') as outfile:
         json.dump(myparams, outfile, indent=2)    

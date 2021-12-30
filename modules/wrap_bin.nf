@@ -61,3 +61,18 @@ process sanitize_sequences {
     cp ${sequences} ${sequences.simpleName}_sanitized.fa.xz
     """
 }
+
+process build_params {
+  executor 'local'
+  input: tuple val(param_str), val(newparam_str)
+  output: stdout()
+  script:
+  """
+  #! /usr/bin/env bash
+  arg_json.py ${param_str}
+  mv tmp_params.json old.json
+  arg_json.py ${newparam_str}
+  mv tmp_params.json new.json
+  json_paramstr.py old.json new.json
+  """
+}
