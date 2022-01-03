@@ -9,7 +9,8 @@ process nextstrain_build {
   output: tuple path("${input_dir}/auspice"), path("${input_dir}/results")
   script:
   """
-  ${nextstrain_app} build --cpus 1 ${input_dir}  # TODO: auto set cpus
+  PROC=`nproc`
+  ${nextstrain_app} build --cpus \${PROC} --native ${input_dir}
   """
   stub:
   """
