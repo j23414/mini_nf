@@ -5,6 +5,28 @@
 nextflow run main.nf -stub-run
 ```
 
+### Option 0.1: Pull data from a url
+
+```
+nextflow run main.nf \
+  --input_url "https://github.com/nextstrain/zika-tutorial/archive/refs/heads/master.zip"
+```
+
+Output:
+
+```
+N E X T F L O W  ~  version 21.10.6
+Launching `main.nf` [zen_swanson] - revision: 89120e33aa
+executor >  local (1)
+[e5/a0ed73] process > wget_url (1)         [100%] 1 of 1, cached: 1 ✔
+[95/98cace] process > nextstrain_build (1) [100%] 1 of 1 ✔
+Completed at: 06-Jan-2022 16:29:02
+Duration    : 1m 35s
+CPU hours   : (a few seconds)
+Succeeded   : 1
+Cached      : 1
+```
+
 ### Option 1: Wrap everything in one process
 
 ```

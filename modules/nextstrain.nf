@@ -6,18 +6,20 @@ process nextstrain_build {
   label 'nextstrain'
   publishDir "${params.outdir}", mode: 'copy'
   input: path(input_dir)
-  output: tuple path("${input_dir}/auspice"), path("${input_dir}/results")
+  output: tuple path("auspice"), path("results")
   script:
   """
   PROC=`nproc`
   ${nextstrain_app} build --cpus \${PROC} --native ${input_dir}
+  mv ${input_dir}/auspice .
+  mv ${input_dir}/results .
   """
   stub:
   """
-  mkdir -p ${input_dir}/results
-  mkdir -p ${input_dir}/auspice
-  touch ${input_dir}/results/something.txt
-  touch ${input_dir}/auspice/something.txt
+  mkdir -p results
+  mkdir -p auspice
+  touch results/something.txt
+  touch auspice/something.txt
   """
 }
 
