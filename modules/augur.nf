@@ -19,9 +19,9 @@ process index {
     """
 }
 
-// TODO: split into filter with and without index files
 process filter {
     label 'nextstrain'
+    publishDir "${params.outdir}", mode: 'copy'
     input: tuple path(sequences), path(sequence_index), path(metadata), path(exclude)
     output: path("${sequences.simpleName}_filtered.fasta")
     script:
@@ -161,19 +161,18 @@ process traits {
 process export {
     label 'nextstrain'
     publishDir("$params.outdir"), mode: 'copy'
-    input: tuple path(tree), path(metadata), path(branch_lengths), \
-      path(traits), path(nt_muts), path(aa_muts), path(colors), \
-      path(lat_longs), path(auspice_config)
+    input: tuple path(tree), path(metadata), \
+      path(node_data), \
+      path(colors), \
+      path(lat_longs), \
+      path(auspice_config)
     output: path("auspice/${tree.simpleName}.json")
     script:
     """
     ${augur_app} export v2 \
         --tree ${tree} \
         --metadata ${metadata} \
-        --node-data ${branch_lengths} \
-                    ${traits} \
-                    ${nt_muts} \
-                    ${aa_muts} \
+        --node-data ${node_data} \
         --colors ${colors} \
         --lat-longs ${lat_longs} \
         --auspice-config ${auspice_config} \
