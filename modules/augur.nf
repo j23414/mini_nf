@@ -4,8 +4,9 @@ nextflow.enable.dsl=2
 
 process index {
     label 'nextstrain'
-    input: path(sequences)
-    output: tuple path("$sequences"), path("${sequences.simpleName}_index.tsv")
+    publishDir "${params.outdir}/${build}"
+    input: tuple val(build), path(sequences)
+    output: tuple val(build), path("$sequences"), path("${sequences.simpleName}_index.tsv")
     script:
     """
     #! /usr/bin/env bash
@@ -19,11 +20,12 @@ process index {
     """
 }
 
+// args = "--group-by country year month --sequences-per-group 20 --min-date 2012"
 process filter {
     label 'nextstrain'
-    publishDir "${params.outdir}", mode: 'copy'
-    input: tuple path(sequences), path(sequence_index), path(metadata), path(exclude)
-    output: path("${sequences.simpleName}_filtered.fasta")
+    publishDir "${params.outdir}/${build}", mode: 'copy'
+    input: tuple val(build), path(sequences), path(sequence_index), path(metadata), path(exclude), val(args)
+    output: tuple val(build), path("${sequences.simpleName}_filtered.fasta")
     script:
     """
     ${augur_app} filter \
@@ -32,9 +34,7 @@ process filter {
         --metadata ${metadata} \
         --exclude ${exclude} \
         --output ${sequences.simpleName}_filtered.fasta \
-        --group-by country year month \
-        --sequences-per-group 20 \
-        --min-date 2012
+        ${args}
     """
     stub:
     """
@@ -42,17 +42,19 @@ process filter {
     """
 }
 
+// args = "--fill-gaps"
 process align {
     label 'nextstrain'
-    input: tuple path(filtered), path(reference)
-    output: path("${filtered.simpleName}_aligned.fasta")
+    publishDir "${params.outdir}/${build}", mode: 'copy'
+    input: tuple val(build), path(filtered), path(reference), val(args)
+    output: tuple val(build), path("${filtered.simpleName}_aligned.fasta")
     script:
     """
     ${augur_app} align \
         --sequences ${filtered} \
         --reference-sequence ${reference} \
         --output ${filtered.simpleName}_aligned.fasta \
-        --fill-gaps
+        ${args}
     """
     stub:
     """
@@ -61,15 +63,18 @@ process align {
 
 }
 
+// args=""
 process tree {
     label 'nextstrain'
-    input: path(aligned)
-    output: path("${aligned.simpleName}_raw.nwk")
+    publishDir "${params.outdir}/${build}", mode: 'copy'
+    input: tuple val(build), path(aligned), val(args)
+    output: tuple val(build), path("${aligned.simpleName}_raw.nwk")
     script:
     """
     ${augur_app} tree \
         --alignment ${aligned} \
-        --output ${aligned.simpleName}_raw.nwk
+        --output ${aligned.simpleName}_raw.nwk \
+        ${args}
     """
     stub:
     """
@@ -77,10 +82,12 @@ process tree {
     """
 }
 
+// args= "--timetree --coalescent opt --date-confidence --date-inference marginal --clock-filter-iqd 4"
 process refine {
     label 'nextstrain'
-    input: tuple path(tree_raw), path(aligned), path(metadata)
-    output: tuple path("${tree_raw.simpleName.replace('_raw','')}.nwk"), path("${tree_raw.simpleName.replace('_raw','')}_branch_lengths.json")
+    publishDir "${params.outdir}/$build", mode: 'copy'
+    input: tuple val(build), path(tree_raw), path(aligned), path(metadata)
+    output: tuple val(build), path("${tree_raw.simpleName.replace('_raw','')}.nwk"), path("${tree_raw.simpleName.replace('_raw','')}_branch_lengths.json")
     script:
     """
     ${augur_app} refine \
@@ -89,11 +96,7 @@ process refine {
         --metadata ${metadata} \
         --output-tree ${tree_raw.simpleName.replace('_raw','')}.nwk \
         --output-node-data ${tree_raw.simpleName.replace('_raw','')}_branch_lengths.json \
-        --timetree \
-        --coalescent opt \
-        --date-confidence \
-        --date-inference marginal \
-        --clock-filter-iqd 4
+        ${args}
     """
     stub:
     """
@@ -101,17 +104,19 @@ process refine {
     """
 }
 
+// args="--inference joint"
 process ancestral {
     label 'nextstrain'
-    input: tuple path(tree), path(aligned)
-    output: path("${tree.simpleName}_nt_muts.json")
+    publishDir "${params.outdir}/${build}", mode: 'copy'
+    input: tuple val(build), path(tree), path(aligned)
+    output: tuple val(build), path("${tree.simpleName}_nt_muts.json")
     script:
     """
     ${augur_app} ancestral \
         --tree ${tree} \
         --alignment ${aligned} \
         --output-node-data ${tree.simpleName}_nt_muts.json \
-        --inference joint
+        ${args}
     """
     stub:
     """
@@ -121,8 +126,9 @@ process ancestral {
 
 process translate {
     label 'nextstrain'
-    input: tuple path(tree), path(nt_muts), path(reference)
-    output: path("${tree.simpleName}_aa_muts.json")
+    publishDir "${params.outdir}/${build}", mode: 'copy'
+    input: tuple val(build), path(tree), path(nt_muts), path(reference)
+    output: tuple val(build), path("${tree.simpleName}_aa_muts.json")
     script:
     """
     ${augur_app} translate \
@@ -138,18 +144,19 @@ process translate {
 
 }
 
+// args = "--columns region country --confidence"
 process traits {
     label 'nextstrain'
-    input: tuple path(tree), path(metadata)
-    output: path("${tree.simpleName}_traits.json")
+    publishDir "${params.outdir}/${build}", mode: 'copy'
+    input: tuple val(build), path(tree), path(metadata), val(args)
+    output: tuple val(build), path("${tree.simpleName}_traits.json")
     script:
     """
     ${augur_app} traits \
         --tree ${tree} \
         --metadata ${metadata} \
         --output ${tree.simpleName}_traits.json \
-        --columns region country \
-        --confidence
+        ${args}
     """
     stub:
     """
@@ -160,13 +167,13 @@ process traits {
 // To make this general purpose, just take a collection of json files, don't split it out
 process export {
     label 'nextstrain'
-    publishDir("$params.outdir"), mode: 'copy'
-    input: tuple path(tree), path(metadata), \
+    publishDir("$params.outdir/${build}"), mode: 'copy'
+    input: tuple val(build), path(tree), path(metadata), \
       path(node_data), \
       path(colors), \
       path(lat_longs), \
       path(auspice_config)
-    output: path("auspice/${tree.simpleName}.json")
+    output: tuple val(build), path("auspice/${tree.simpleName}.json")
     script:
     """
     ${augur_app} export v2 \
