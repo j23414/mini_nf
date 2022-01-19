@@ -5,7 +5,7 @@ nextflow.enable.dsl=2
 // ==== Individual Processes
 process index {
     label 'nextstrain'
-    publishDir "${params.outdir}/${build}"
+    publishDir "${params.outdir}/${build}", mode: 'copy'
     input: tuple val(build), path(sequences)
     output: tuple val(build), path("$sequences"), path("${sequences.simpleName}_index.tsv")
     script:

@@ -152,3 +152,38 @@ work/
       |_ .command.err        #<= check these files to debug
       |_ .command.out
 ```
+
+## Other Workflows
+
+Create subworkflows to check if modules are generalizable.
+
+**zika.nf**
+
+Pulls the zika github repo. Similar behavior can be used for pulling default reference files.
+
+```
+nextflow run zika.nf
+
+N E X T F L O W  ~  version 21.10.6
+Launching `zika.nf` [trusting_magritte] - revision: 7490729bc1
+executor >  local (11)
+[a1/b4ff73] process > ZIKA_EXAMPLE_PIPE:pull_zika        [100%] 1 of 1 ✔
+[d4/dc9107] process > ZIKA_EXAMPLE_PIPE:mk_zika_channels [100%] 1 of 1 ✔
+[2a/031a76] process > ZIKA_EXAMPLE_PIPE:index (1)        [100%] 1 of 1 ✔
+[39/b7224c] process > ZIKA_EXAMPLE_PIPE:filter (1)       [100%] 1 of 1 ✔
+[64/4b5003] process > ZIKA_EXAMPLE_PIPE:align (1)        [100%] 1 of 1 ✔
+[56/6db4da] process > ZIKA_EXAMPLE_PIPE:tree (1)         [100%] 1 of 1 ✔
+[8f/8cdaf6] process > ZIKA_EXAMPLE_PIPE:refine (1)       [100%] 1 of 1 ✔
+[b9/64e0c3] process > ZIKA_EXAMPLE_PIPE:ancestral (1)    [100%] 1 of 1 ✔
+[61/dc4012] process > ZIKA_EXAMPLE_PIPE:translate (1)    [100%] 1 of 1 ✔
+[fb/49cc4c] process > ZIKA_EXAMPLE_PIPE:traits (1)       [100%] 1 of 1 ✔
+[a5/f41da6] process > ZIKA_EXAMPLE_PIPE:export (1)       [100%] 1 of 1 ✔
+Completed at: 19-Jan-2022 16:57:08
+Duration    : 1m 4s
+CPU hours   : (a few seconds)
+Succeeded   : 11
+```
+
+**ncov-simplest.nf**
+
+**ncov-simple.nf**
