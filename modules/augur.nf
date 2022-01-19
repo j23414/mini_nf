@@ -2,6 +2,7 @@
 
 nextflow.enable.dsl=2
 
+// ==== Individual Processes
 process index {
     label 'nextstrain'
     publishDir "${params.outdir}/${build}"
@@ -86,7 +87,7 @@ process tree {
 process refine {
     label 'nextstrain'
     publishDir "${params.outdir}/$build", mode: 'copy'
-    input: tuple val(build), path(tree_raw), path(aligned), path(metadata)
+    input: tuple val(build), path(tree_raw), path(aligned), path(metadata), val(args)
     output: tuple val(build), path("${tree_raw.simpleName.replace('_raw','')}.nwk"), path("${tree_raw.simpleName.replace('_raw','')}_branch_lengths.json")
     script:
     """
@@ -108,7 +109,7 @@ process refine {
 process ancestral {
     label 'nextstrain'
     publishDir "${params.outdir}/${build}", mode: 'copy'
-    input: tuple val(build), path(tree), path(aligned)
+    input: tuple val(build), path(tree), path(aligned), val(args)
     output: tuple val(build), path("${tree.simpleName}_nt_muts.json")
     script:
     """
@@ -167,13 +168,13 @@ process traits {
 // To make this general purpose, just take a collection of json files, don't split it out
 process export {
     label 'nextstrain'
-    publishDir("$params.outdir/${build}"), mode: 'copy'
+    publishDir("${params.outdir}/${build}"), mode: 'copy'
     input: tuple val(build), path(tree), path(metadata), \
       path(node_data), \
       path(colors), \
       path(lat_longs), \
       path(auspice_config)
-    output: tuple val(build), path("auspice/${tree.simpleName}.json")
+    output: tuple val(build), path("auspice")
     script:
     """
     ${augur_app} export v2 \
@@ -205,3 +206,72 @@ process export {
 // process validate { }
 // process import { }
 // process sanitize {} ? :)
+
+// ==== Workflows
+workflow AUGUR_DEFAULTS {
+  take:
+    build_ch
+    sequences_ch
+    metadata_ch
+    exclude_ch
+    ref_ch
+    colors_ch
+    lat_longs_ch
+    auspice_config_ch
+
+  main:
+    build_ch
+    | combine(sequences_ch)
+    | index
+    | combine(metadata_ch)
+    | combine(exclude_ch)
+    | combine(channel.of("--group-by country year month --sequences-per-group 20 --min-date 2012"))
+    | filter
+    | combine(ref_ch)
+    | combine(channel.of("--fill-gaps"))
+    | align
+    | combine(channel.of(""))
+    | tree
+    | join(align.out)
+    | combine(metadata_ch)
+    | combine(channel.of("--timetree --coalescent opt --date-confidence --date-inference marginal --clock-filter-iqd 4"))
+    | refine
+
+  tree_ch = refine.out 
+    | map { n-> [n.get(0), n.get(1)] }
+  
+  branch_length_ch = refine.out 
+    | map{ n-> [n.get(0), n.get(2)] }
+  
+  tree_ch
+    | join(align.out) 
+    | combine(channel.of("--inference joint"))
+    | ancestral
+  
+  tree_ch 
+    | join(ancestral.out) 
+    | combine(ref_ch) 
+    | translate
+  
+  tree_ch
+    | combine(metadata_ch) 
+    | combine(channel.of("--columns region country --confidence"))
+    | traits
+
+  node_data_ch = branch_length_ch
+    | join(traits.out)
+    | join(ancestral.out)
+    | join(translate.out)
+    | map {n -> [n.drop(1)]}
+  
+  tree_ch
+    | combine(metadata_ch)
+    | combine(node_data_ch)
+    | combine(colors_ch) 
+    | combine(lat_longs_ch) 
+    | combine(auspice_config_ch)
+    | export
+
+  emit:
+    export.out
+}

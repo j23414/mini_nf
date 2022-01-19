@@ -3,14 +3,16 @@
 nextflow.enable.dsl=2
 
 // Option 1: Wrap everything in one nextflow task
-include { nextstrain_build } from './modules/nextstrain.nf'
+//include { nextstrain_build } from './modules/nextstrain.nf'
 
 // Option 2: Wrap individual modules in Nextflow
-include { index; filter; align; tree; refine; ancestral; translate; traits; export } from './modules/augur.nf'
-include { nextclade_sars_cov_2 as nextclade } from './modules/nextclade.nf'
-include { nextalign } from './modules/nextalign.nf'
-include { batchfetchGB as pull_genbanks ; gb_to_fna as convert_to_fasta; build_params} from './modules/wrap_bin.nf'
-include { wget_url } from './modules/unix.nf'
+//include { index; filter; align; tree; refine; ancestral; translate; traits; export } from './modules/augur.nf'
+//include { nextclade_sars_cov_2 as nextclade } from './modules/nextclade.nf'
+//include { nextalign } from './modules/nextalign.nf'
+//include { batchfetchGB as pull_genbanks ; gb_to_fna as convert_to_fasta; build_params} from './modules/wrap_bin.nf'
+//include { wget_url } from './modules/unix.nf'
+
+include {AUGUR_DEFAULTS} from "./modules/augur.nf"
 
 workflow {
 /* TODO: read native snakemake yaml
@@ -33,15 +35,15 @@ workflow {
   //  clades_ch  = seq_ch | nextclade
   
   //  /* ========= Nextstrain ======== */
-  if (params.input_url) {  // Option 0?: pull data from url
-    channel.of(params.input_url) |
-      wget_url |
-      nextstrain_build
-  } else {
-    if (params.input_dir) {  // Option 1: Fast wrapped route (default)
-        channel.fromPath(params.input_dir, checkIfExists:true) |
-          nextstrain_build
-    } else {                // Option 2: Slow module route
+//  if (params.input_url) {  // Option 0?: pull data from url
+//    channel.of(params.input_url) |
+//      wget_url |
+//      nextstrain_build
+//  } else {
+//    if (params.input_dir) {  // Option 1: Fast wrapped route (default)
+//        channel.fromPath(params.input_dir, checkIfExists:true) |
+//          nextstrain_build
+//    } else {                // Option 2: Slow module route
       sequences_ch = Channel.fromPath(params.sequences, checkIfExists:true)
       metadata_ch = Channel.fromPath(params.metadata, checkIfExists:true)
       exclude_ch = Channel.fromPath(params.exclude, checkIfExists:true)
@@ -50,51 +52,17 @@ workflow {
       lat_longs_ch = Channel.fromPath(params.lat_longs, checkIfExists:true)
       auspice_config_ch = Channel.fromPath(params.auspice_config, checkIfExists:true)
   
-      // Run pipeline (chain together processes and add other params on the way)
-      sequences_ch 
-        | index
-        | combine(metadata_ch) 
-        | combine(exclude_ch) 
-        | filter 
-        | combine(ref_ch ) 
-        | align
-        | tree
-        | combine(align.out) 
-        | combine(metadata_ch) 
-        | refine
+      build_ch = channel.of("default-build")
 
-      tree_ch = refine.out 
-        | map { n-> n.get(0) }
-      
-      branch_length_ch = refine.out 
-        | map{ n-> n.get(1) }
-      
-      tree_ch
-        | combine(align.out) 
-        | ancestral
-  
-      tree_ch 
-        | combine(ancestral.out) 
-        | combine(ref_ch) 
-        | translate  // TRANSLATE
-      
-      tree_ch
-        | combine(metadata_ch) 
-        | traits
-
-      node_data_ch = branch_length_ch
-        | combine(traits.out)
-        | combine(ancestral.out)
-        | combine(translate.out)
-        | map { n -> [n]}
-      
-      tree_ch
-        | combine(metadata_ch)
-        | combine(node_data_ch)
-        | combine(colors_ch) 
-        | combine(lat_longs_ch) 
-        | combine(auspice_config_ch) 
-        | export
-    }
-  }
+      AUGUR_DEFAULTS (
+        build_ch, 
+        sequences_ch, 
+        metadata_ch, 
+        exclude_ch, 
+        ref_ch, 
+        colors_ch, 
+        lat_longs_ch, 
+        auspice_config_ch
+      ) 
+  //}
 }
