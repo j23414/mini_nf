@@ -186,4 +186,23 @@ Succeeded   : 11
 
 **ncov-simplest.nf**
 
+```
+nextflow run ncov-simplest.nf
+
+N E X T F L O W  ~  version 21.10.6
+Launching `ncov-simplest.nf` [intergalactic_panini] - revision: c463dc300f
+executor >  local (6)
+[16/1e470f] process > NCOV_SIMPLEST_PIPE:pull_ncov_simplest             [100%] 1 of 1 ✔
+[4a/1fa10d] process > NCOV_SIMPLEST_PIPE:mk_ncov_simplest_channels      [100%] 1 of 1 ✔
+[e5/832217] process > NCOV_SIMPLEST_PIPE:download_nextclade_dataset (1) [100%] 1 of 1 ✔
+[f9/fa5b69] process > NCOV_SIMPLEST_PIPE:download_lat_longs (1)         [100%] 1 of 1 ✔
+[04/6d2380] process > NCOV_SIMPLEST_PIPE:download_sequences (1)         [100%] 1 of 1 ✔
+[33/347e01] process > NCOV_SIMPLEST_PIPE:download_metadata (1)          [100%] 1 of 1 ✔
+Waiting files transfer to complete (1 files)
+Completed at: 19-Jan-2022 17:32:00
+Duration    : 3m 11s
+CPU hours   : 0.1
+Succeeded   : 6
+```
+
 **ncov-simple.nf**
