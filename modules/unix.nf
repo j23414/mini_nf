@@ -12,20 +12,36 @@ nextflow.enable.dsl=2
 //     """
 // }
 
-// https://github.com/nextstrain/zika-tutorial/archive/refs/heads/master.zip
-process wget_url {
-  publishDir "${params.outdir}", mode: "copy"
-  input: val(url)
-  output: path("zika-tutorial")
+// equivalent to join_ref_meta
+process cat_files {
+  publishDir "${params.outdir}/${build}", mode: 'copy'
+  input: tuple val(build), path(f1), path(f2)
+  output: tuple val(build), path("metadata.tsv")
+  script:
+  """
+  cat ${f1} ${f2} > metadata.tsv
+  """
+}
+
+// equivalent to join_ref_fasta, probably a way to combine with above...
+process cat_fasta {
+  publishDir "${params.outdir}/${build}", mode: 'copy'
+  input: tuple val(build), path(f1), path(f2)
+  output: tuple val(build), path("omicron.fasta")
+  script:
+  """
+  cat ${f1} ${f2} > omicron.fasta
+  """
+}
+
+// Prefer xx over gz
+process gz_to_xz {
+  input: path(file_gz)
+  output: path("${file_gz.simpleName}.xz")
   script:
   """
   #! /usr/bin/env bash
-  wget "${url}"
-  unzip master.zip # There s probably a shorter way
-  mv zika-tutorial-master zika-tutorial
-  """
-  stub:
-  """
-  mkdir zika-tutorial
+  ORIGSUM=$(gzip -dc file_gz | tee >(xz > ${file_gz.simpleName}.xz) | sha1sum )
+  NEWSUM=$(unxz -c file.xz | sha1sum)
   """
 }

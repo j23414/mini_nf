@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-
+#AUTH: corneliusroemer/ncov-simplest
 #%%
 from typing_extensions import Required
 import pandas as pd
