@@ -2,6 +2,7 @@
 
 nextflow.enable.dsl=2
 
+// === Import reusable modules
 include { aws_s3_cp as download_sequences; 
           aws_s3_cp as download_metadata;
           download_lat_longs } from "./modules/downloads.nf"
@@ -31,6 +32,7 @@ include { nextalign as nextclade;
 //          translate as translate_unmasked;
 //          recency } from "./modules/wrap_bin.nf"
 
+// === Create specialized processes for this workflow
 process pull_ncov_simplest {
   publishDir "${params.outdir}/Downloads", mode: 'copy'
   output: path("ncov-simplest-main")
@@ -51,13 +53,43 @@ process mk_ncov_simplest_channels {
     path("ncov-simplest-main/data/reference_seq.fasta"),\
     path("ncov-simplest-main/data/annotation.gff"),\
     path("ncov-simplest-main/data/exclude_tree_build.txt"),\
-    path("ncov-simplest-main/data"), \
+    path("ncov-simplest-main/data"),\
     path("ncov-simplest-main/scripts") // Huh, could also connect code here
   script:
   """
   """
 }
 
+process get_build_specific_channels {
+  publishDir "${params.outdir}/Downloads/subset"
+  input: tuple val(build), path(data_dir), val(filename)
+  output: tuple val("${build}"), path("${data_dir}/${build}/${filename}")
+  script:
+  """
+  """
+}
+
+// == Try wrapping ncov-simplest scripts here (latest version from the repo)
+//include { subsample_meta;
+//          mask; 
+//          translate;
+//          translate as translate_unmasked;
+//          recency } from "./modules/wrap_bin.nf"
+
+process subsample_meta {
+  publishDir "${params.outdir}/${build}", mode: 'copy'
+  input: tuple val(build), path(metadata), path(population), path(scripts_dir)
+  output: tuple val(build), path("metadata_subsampled.tsv")
+  script: 
+  """
+  ${scripts_dir}/subsample.py \
+    --population ${population} \
+    --input-metadata ${metadata} \
+    --output-metadata metadata_subsampled.tsv
+  """
+}
+
+// === Create importable workflow
 workflow NCOV_SIMPLEST_PIPE {
   main:
 
@@ -70,15 +102,19 @@ workflow NCOV_SIMPLEST_PIPE {
     refseq_ch = mk_ncov_simplest_channels.out | map { n -> n.get(3) }
     genemap_ch = mk_ncov_simplest_channels.out | map { n -> n.get(4) }
     exclude_sites_ch = mk_ncov_simplest_channels.out | map { n -> n.get(5) }
+    data_ch = mk_ncov_simplest_channels.out | map { n -> n.get(6) }
+    scripts_ch = mk_ncov_simplest_channels.out | map { n -> n.get(7) }
+
+    buildname_ch = channel.of("21K", "21L") 
+    | combine(data_ch) 
+    | combine(channel.of("exclude.txt", "mask_sites.txt", "auspice_config.json")) 
+    | get_build_specific_channels
+
+    exclude_ch = buildname_ch | filter({ it.get(1) =~ /exclude/})
+    masksites_ch = buildname_ch | filter({ it.get(1) =~ /mask_sites/})
+    auspice_cfg_ch = buildname_ch | filter({ it.get(1) =~ /auspice_config/})
   
-    //exclude_ch = channel.fromPath("data/*/exclude.txt") 
-    //  | map { n -> [n.getParent().simpleName.replace("*/",""), n]}
-    //masksites_ch = channel.fromPath("data/*/mask_sites.txt")
-    //  | map { n -> [n.getParent().simpleName.replace("*/",""), n]}
-    //auspice_cfg_ch = channel.fromPath("data/*/auspice_config.json")
-    //  | map { n -> [n.getParent().simpleName.replace("*/",""), n]}
-  
-    sars_ch = channel.of("sars-cov-2") 
+    sars_ch = channel.of("sars-cov-2")
       | download_nextclade_dataset 
     latlong_ch = channel.of("https://raw.githubusercontent.com/nextstrain/ncov/master/defaults/lat_longs.tsv")
       | download_lat_longs
@@ -94,14 +130,15 @@ workflow NCOV_SIMPLEST_PIPE {
       channel.of("metadata.tsv.gz","s3://nextstrain-ncov-private/metadata.tsv.gz")
       .collate(2)
       | download_metadata
-  //
-    //// Omicron data channels
-    //omicron_ch = metadata_ch
-    //  | extract_omicron_metadata    // omicron_meta_ch
-    //  | get_omicron_strain_names
-    //  | combine(sequences_ch)
-    //  | extract_omicron_sequences   // omicron_seqs_ch
-    //  | create_index
+  
+    // Omicron data channels
+    omicron_ch = metadata_ch
+      | extract_omicron_metadata    // omicron_meta_ch
+      | get_omicron_strain_names
+      | combine(sequences_ch)
+      | extract_omicron_sequences   // omicron_seqs_ch
+      | combine(channel.of("omicron")) | map { n -> [n.get(1), n.get(0)]}
+      | create_index
   //
     //// Run builds in parallel
     //builds_ch = channel.of("21K", "21L")
@@ -200,6 +237,7 @@ workflow NCOV_SIMPLEST_PIPE {
     pull_ncov_simplest.out
 }
 
+// Similar to the if __main__ in python, call the workflow
 workflow {
   NCOV_SIMPLEST_PIPE()
 }
