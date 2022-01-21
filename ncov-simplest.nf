@@ -82,7 +82,7 @@ process subsample_meta {
   output: tuple val(build), path("metadata_subsampled.tsv")
   script: 
   """
-  ${scripts_dir}/subsample.py \
+  python ${scripts_dir}/subsample.py \
     --population ${population} \
     --input-metadata ${metadata} \
     --output-metadata metadata_subsampled.tsv
@@ -139,21 +139,24 @@ workflow NCOV_SIMPLEST_PIPE {
       | extract_omicron_sequences   // omicron_seqs_ch
       | combine(channel.of("omicron")) | map { n -> [n.get(1), n.get(0)]}
       | create_index
-  //
-    //// Run builds in parallel
-    //builds_ch = channel.of("21K", "21L")
-    //  | combine(extract_omicron_metadata.out)
-    //  | filter_meta
-    //  | combine(pop_ch)
-    //  | subsample_meta
-    //  | combine(ref_ch)
-    //  | join_ref_meta
-    //  | join(exclude_ch)    // Exclude by build
-    //  | combine(omicron_ch)
-    //  | exclude_outliers
-    //  | combine(refseq_ch)
-    //  | join_ref_fasta
-    //  | combine(sars_ch)
+  
+    // Run builds in parallel
+    builds_ch = channel.of("21K", "21L")
+      | combine(extract_omicron_metadata.out)
+      | filter_meta
+      | combine(pop_ch)
+      | combine(scripts_ch)
+      | subsample_meta
+      | combine(ref_ch)
+      | join_ref_meta
+      | join(exclude_ch)    // Exclude by build
+      | combine(omicron_ch| map {n -> [n.get(1), n.get(2)]})
+      | map {n -> [n.get(0), n.get(3), n.get(4), n.get(1), n.get(2)]}
+      | combine(channel.of(""))
+      | exclude_outliers
+      | combine(refseq_ch)
+      | join_ref_fasta
+      | combine(sars_ch)
     //  | combine(channel.of("premask"))
     //  | nextclade
     //  | map { n -> [n.get(0), n.get(1)]}

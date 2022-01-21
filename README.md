@@ -202,7 +202,19 @@ executor >  local (6)
 [2a/55bb6f] process > NCOV_SIMPLEST_PIPE:extract_omicron_metadata (1)    [100%] 1 of 1, cached: 1 ✔
 [5b/73930b] process > NCOV_SIMPLEST_PIPE:get_omicron_strain_names (1)    [100%] 1 of 1, cached: 1 ✔
 [c4/2bf344] process > NCOV_SIMPLEST_PIPE:extract_omicron_sequences (1)   [100%] 1 of 1, cached: 1 ✔
-[a1/48c389] process > NCOV_SIMPLEST_PIPE:create_index (1)                [  0%] 0 of 1
+[a1/48c389] process > NCOV_SIMPLEST_PIPE:create_index (1)                [100%] 1 of 1, cached: 1 ✔
+[6e/c8f873] process > NCOV_SIMPLEST_PIPE:filter_meta (2)                 [100%] 2 of 2, cached: 2 ✔
+[78/063ff8] process > NCOV_SIMPLEST_PIPE:subsample_meta (1)              [100%] 2 of 2, cached: 2 ✔
+[a5/902899] process > NCOV_SIMPLEST_PIPE:join_ref_meta (2)               [100%] 2 of 2, cached: 2 ✔
+[01/0caf08] process > NCOV_SIMPLEST_PIPE:exclude_outliers (2)            [100%] 2 of 2 ✔
+[3f/72e2d4] process > NCOV_SIMPLEST_PIPE:join_ref_fasta (2)              [100%] 2 of 2 ✔
+
+WARN: Task runtime metrics are not reported when using macOS without a container engine
+Completed at: 21-Jan-2022 16:52:34
+Duration    : 3m 15s
+CPU hours   : 0.5 (77.7% cached)
+Succeeded   : 4
+Cached      : 22
 ```
 
 **ncov-simple.nf**
