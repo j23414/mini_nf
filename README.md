@@ -206,15 +206,14 @@ executor >  local (6)
 [6e/c8f873] process > NCOV_SIMPLEST_PIPE:filter_meta (2)                 [100%] 2 of 2, cached: 2 ✔
 [78/063ff8] process > NCOV_SIMPLEST_PIPE:subsample_meta (1)              [100%] 2 of 2, cached: 2 ✔
 [a5/902899] process > NCOV_SIMPLEST_PIPE:join_ref_meta (2)               [100%] 2 of 2, cached: 2 ✔
-[01/0caf08] process > NCOV_SIMPLEST_PIPE:exclude_outliers (2)            [100%] 2 of 2 ✔
-[3f/72e2d4] process > NCOV_SIMPLEST_PIPE:join_ref_fasta (2)              [100%] 2 of 2 ✔
+[01/0caf08] process > NCOV_SIMPLEST_PIPE:exclude_outliers (2)            [100%] 2 of 2, cached: 2 ✔
+[3f/72e2d4] process > NCOV_SIMPLEST_PIPE:join_ref_fasta (2)              [100%] 2 of 2, cached: 2 ✔
+[07/f8f7b2] process > NCOV_SIMPLEST_PIPE:nextclade (2)                   [100%] 2 of 2, cached: 2 ✔
+[42/2c0bb1] process > NCOV_SIMPLEST_PIPE:mask (2)                        [100%] 2 of 2, cached: 2 ✔
+[d1/046906] process > NCOV_SIMPLEST_PIPE:nextclade_after_mask (2)        [100%] 2 of 2, cached: 2 ✔
+[3f/689c80] process > NCOV_SIMPLEST_PIPE:tree (2)                        [100%] 2 of 2, cached: 2 ✔
+[09/11e718] process > NCOV_SIMPLEST_PIPE:refine (1)                      [100%] 2 of 2, cached: 2 ✔
 
-WARN: Task runtime metrics are not reported when using macOS without a container engine
-Completed at: 21-Jan-2022 16:52:34
-Duration    : 3m 15s
-CPU hours   : 0.5 (77.7% cached)
-Succeeded   : 4
-Cached      : 22
 ```
 
 **ncov-simple.nf**

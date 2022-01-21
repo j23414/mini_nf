@@ -22,6 +22,23 @@ process dataset_get {
   """
 }
 
+process dataset_get_fasta_gff {
+  label 'nextclade'
+  publishDir "${params.outdir}/01_Nextclade", mode: 'copy'
+  input: val(dataset_name)
+  output: tuple path("${dataset_name}/reference.fasta"), path("${dataset_name}/genemap.gff")
+  script:
+  """
+  ${nextclade_app} dataset get \
+    --name '${dataset_name}' \
+    --output-dir '${dataset_name}'
+  """
+  stub:
+  """
+  mkdir ${dataset_name}
+  """
+}
+
 // Given a dataset and a query, return a folder of clades
 process nextclade_run {  // run is nextflow reserved word
   label 'nextclade'

@@ -15,11 +15,11 @@ include { extract_omicron_metadata;
 include { cat_files as join_ref_meta;
           cat_fasta as join_ref_fasta } from "./modules/unix.nf"
 
-include {dataset_get as download_nextclade_dataset } from "./modules/nextclade.nf"
+include {dataset_get_fasta_gff as download_nextclade_dataset } from "./modules/nextclade.nf"
 
 include {index as create_index;
          filter as exclude_outliers;
-         tree ; refine ; ancestral;
+         tree_with_exclude as tree ; refine ; ancestral;
          ancestral as ancestral_unmasked;
          export } from "./modules/augur.nf"
 
@@ -89,6 +89,24 @@ process subsample_meta {
   """
 }
 
+process mask {
+  publishDir "${params.outdir}/${build}", mode: 'copy'
+  input: tuple val(build), path(alignment), path(mask_sites), path(scripts_dir)
+  output: tuple val(build), path("masked.fasta")
+  script:
+  """
+  python ${scripts_dir}/mask-alignment.py \
+    --alignment ${alignment} \
+    --mask-from-beginning 100 \
+    --mask-from-end 200 \
+    --mask-terminal-gaps \
+    --mask-site-file ${mask_sites} \
+    --output masked.fasta
+  """
+}
+
+
+
 // === Create importable workflow
 workflow NCOV_SIMPLEST_PIPE {
   main:
@@ -157,38 +175,39 @@ workflow NCOV_SIMPLEST_PIPE {
       | combine(refseq_ch)
       | join_ref_fasta
       | combine(sars_ch)
-    //  | combine(channel.of("premask"))
-    //  | nextclade
-    //  | map { n -> [n.get(0), n.get(1)]}
-    //  | join(masksites_ch)
-    //  | mask
-    //  | combine(sars_ch)
-    //  | combine(channel.of("omicron"))
-    //  | nextclade_after_mask
-    //  | map { n -> [n.get(0), n.get(1)]}
-    //  | combine(channel.of("-ninit 10 -n 4 -czb -ntmax 10 -nt AUTO")) // iqtree did not recognize  "-T AUTO "
-    //  | combine(exclude_sites_ch)
-    //  | tree
-    //  | combine(channel.of("MN908947"))
-    //  | join(mask.out)
-    //  | join(join_ref_meta.out)
-    //  | refine
-  //
-    //tree_ch = refine.out
-    //  | map { n -> [n.get(0), n.get(1)]}
-  //
-    //branch_length_ch = refine.out
-    //  | map { n -> [n.get(0), n.get(2)]}
-    //
-    //// === Generate node data (ancestral, translate, recency)
-    //// Feat: Could combine mask & unmasked | ancestral
-    //// Left separate for readability
-    //tree_ch
-    //  | join(mask.out)
-    //  | combine(channel.of("--infer-ambiguous"))
-    //  | combine(channel.of("nt_muts"))
-    //  | ancestral
-  //
+      | combine(channel.of("premask"))
+      | nextclade
+      | map { n -> [n.get(0), n.get(1)]}
+      | join(masksites_ch)
+      | combine(scripts_ch)
+      | mask
+      | combine(sars_ch) 
+      | combine(channel.of("omicron"))
+      | nextclade_after_mask
+      | map { n -> [n.get(0), n.get(1)]} 
+      | combine(channel.of("--tree-builder-args \"-ninit 10 -n 4 -czb -ntmax 10 -nt AUTO\"")) // iqtree did not recognize  "-T AUTO "
+      | combine(exclude_sites_ch)
+      | tree
+      | join(mask.out)
+      | join(join_ref_meta.out)
+      | combine(channel.of("--divergence-units mutations --root MN908947"))
+      | refine
+  
+    tree_ch = refine.out
+      | map { n -> [n.get(0), n.get(1)]}
+  
+    branch_length_ch = refine.out
+      | map { n -> [n.get(0), n.get(2)]}
+    
+    // === Generate node data (ancestral, translate, recency)
+    // Feat: Could combine mask & unmasked | ancestral
+    // Left separate for readability
+    tree_ch
+      | join(mask.out)
+      | combine(channel.of("--infer-ambiguous"))
+      | combine(channel.of("nt_muts"))
+      | ancestral
+      
     //unmasked_ch = nextclade.out
     //  | map { n -> [n.get(0), n.get(1)]}
   //

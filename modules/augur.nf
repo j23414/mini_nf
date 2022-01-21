@@ -22,6 +22,7 @@ process index {
 }
 
 // args = "--group-by country year month --sequences-per-group 20 --min-date 2012"
+// tuple val(build), path(metadata), path(exclude), path(sequences), path(sequence_index)
 process filter {
     label 'nextstrain'
     publishDir "${params.outdir}/${build}", mode: 'copy'
@@ -76,6 +77,25 @@ process tree {
         --alignment ${aligned} \
         --output ${aligned.simpleName}_raw.nwk \
         ${args}
+    """
+    stub:
+    """
+    touch ${aligned.simpleName}_raw.nwk
+    """
+}
+
+process tree_with_exclude {
+    label 'nextstrain'
+    publishDir "${params.outdir}/${build}", mode: 'copy'
+    input: tuple val(build), path(aligned), val(args), path(exclude_sites)
+    output: tuple val(build), path("${aligned.simpleName}_raw.nwk")
+    script:
+    """
+    ${augur_app} tree \
+        --alignment ${aligned} \
+        --output ${aligned.simpleName}_raw.nwk \
+        ${args} \
+        --exclude-sites ${exclude_sites}
     """
     stub:
     """
