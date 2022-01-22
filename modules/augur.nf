@@ -84,6 +84,7 @@ process tree {
     """
 }
 
+// Hmm figure out arguments string and connecting passed files, this is a hack for now
 process tree_with_exclude {
     label 'nextstrain'
     publishDir "${params.outdir}/${build}", mode: 'copy'
@@ -145,6 +146,27 @@ process ancestral {
     """
 }
 
+process ancestral_rename {
+    label 'nextstrain'
+    publishDir "${params.outdir}/${build}", mode: 'copy'
+    input: tuple val(build), path(tree), path(aligned), val(args), val(output_node_data)
+    output: tuple val(build), path("${output_node_data}.json")
+    script:
+    """
+    ${augur_app} ancestral \
+        --tree ${tree} \
+        --alignment ${aligned} \
+        --output-node-data ${output_node_data}.json \
+        ${args}
+    """
+    stub:
+    """
+    touch ${tree.simpleName}_nt_muts.json
+    """
+}
+
+
+
 process translate {
     label 'nextstrain'
     publishDir "${params.outdir}/${build}", mode: 'copy'
@@ -205,6 +227,31 @@ process export {
         --lat-longs ${lat_longs} \
         --auspice-config ${auspice_config} \
         --output auspice/${tree.simpleName}.json
+    """
+    stub:
+    """
+    mkdir auspice
+    touch auspice/${tree.simpleName}.json
+    """
+}
+
+process export_default_colors {
+    label 'nextstrain'
+    publishDir("${params.outdir}/auspice"), mode: 'copy'
+    input: tuple val(build), path(tree), path(metadata), path(node_data), \
+      path(lat_longs), path(auspice_config)
+    output: tuple val("$build}"), path("${build}.json")
+    script:
+    """
+    export AUGUR_RECURSION_LIMIT=10000;
+    ${augur_app} export v2 \
+        --tree ${tree} \
+        --metadata ${metadata} \
+        --node-data ${node_data} \
+        --lat-longs ${lat_longs} \
+        --auspice-config ${auspice_config} \
+        --output auspice/${build}.json
+    cp auspice/${build}.json .
     """
     stub:
     """

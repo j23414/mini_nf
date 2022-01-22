@@ -194,7 +194,7 @@ Launching `ncov-simplest.nf` [intergalactic_panini] - revision: c463dc300f
 executor >  local (6)
 [16/1e470f] process > NCOV_SIMPLEST_PIPE:pull_ncov_simplest              [100%] 1 of 1, cached: 1 ✔
 [4a/1fa10d] process > NCOV_SIMPLEST_PIPE:mk_ncov_simplest_channels       [100%] 1 of 1, cached: 1 ✔
-[ea/93a467] process > NCOV_SIMPLEST_PIPE:get_build_specific_channels (5) [100%] 6 of 6, cached: 6 ✔
+[a0/a67471] process > NCOV_SIMPLEST_PIPE:get_build_specific_channels (6) [100%] 6 of 6, cached: 6 ✔
 [e5/832217] process > NCOV_SIMPLEST_PIPE:download_nextclade_dataset (1)  [100%] 1 of 1, cached: 1 ✔
 [f9/fa5b69] process > NCOV_SIMPLEST_PIPE:download_lat_longs (1)          [100%] 1 of 1, cached: 1 ✔
 [04/6d2380] process > NCOV_SIMPLEST_PIPE:download_sequences (1)          [100%] 1 of 1, cached: 1 ✔
@@ -203,17 +203,21 @@ executor >  local (6)
 [5b/73930b] process > NCOV_SIMPLEST_PIPE:get_omicron_strain_names (1)    [100%] 1 of 1, cached: 1 ✔
 [c4/2bf344] process > NCOV_SIMPLEST_PIPE:extract_omicron_sequences (1)   [100%] 1 of 1, cached: 1 ✔
 [a1/48c389] process > NCOV_SIMPLEST_PIPE:create_index (1)                [100%] 1 of 1, cached: 1 ✔
-[6e/c8f873] process > NCOV_SIMPLEST_PIPE:filter_meta (2)                 [100%] 2 of 2, cached: 2 ✔
-[78/063ff8] process > NCOV_SIMPLEST_PIPE:subsample_meta (1)              [100%] 2 of 2, cached: 2 ✔
+[bc/b7aa83] process > NCOV_SIMPLEST_PIPE:filter_meta (1)                 [100%] 2 of 2, cached: 2 ✔
+[78/063ff8] process > NCOV_SIMPLEST_PIPE:subsample_meta (2)              [100%] 2 of 2, cached: 2 ✔
 [a5/902899] process > NCOV_SIMPLEST_PIPE:join_ref_meta (2)               [100%] 2 of 2, cached: 2 ✔
-[01/0caf08] process > NCOV_SIMPLEST_PIPE:exclude_outliers (2)            [100%] 2 of 2, cached: 2 ✔
-[3f/72e2d4] process > NCOV_SIMPLEST_PIPE:join_ref_fasta (2)              [100%] 2 of 2, cached: 2 ✔
-[07/f8f7b2] process > NCOV_SIMPLEST_PIPE:nextclade (2)                   [100%] 2 of 2, cached: 2 ✔
+[27/f11cdc] process > NCOV_SIMPLEST_PIPE:exclude_outliers (2)            [100%] 2 of 2, cached: 2 ✔
+[db/c95e4f] process > NCOV_SIMPLEST_PIPE:join_ref_fasta (2)              [100%] 2 of 2, cached: 2 ✔
+[ec/a94c86] process > NCOV_SIMPLEST_PIPE:nextclade (1)                   [100%] 2 of 2, cached: 2 ✔
 [42/2c0bb1] process > NCOV_SIMPLEST_PIPE:mask (2)                        [100%] 2 of 2, cached: 2 ✔
 [d1/046906] process > NCOV_SIMPLEST_PIPE:nextclade_after_mask (2)        [100%] 2 of 2, cached: 2 ✔
 [3f/689c80] process > NCOV_SIMPLEST_PIPE:tree (2)                        [100%] 2 of 2, cached: 2 ✔
-[09/11e718] process > NCOV_SIMPLEST_PIPE:refine (1)                      [100%] 2 of 2, cached: 2 ✔
-
+[a8/dcfeab] process > NCOV_SIMPLEST_PIPE:refine (2)                      [100%] 2 of 2, cached: 2 ✔
+[11/9699c8] process > NCOV_SIMPLEST_PIPE:ancestral (2)                   [100%] 2 of 2, cached: 2 ✔
+[eb/76e810] process > NCOV_SIMPLEST_PIPE:ancestral_unmasked (2)          [100%] 2 of 2, cached: 2 ✔
+[ae/5f2bc6] process > NCOV_SIMPLEST_PIPE:translate (4)                   [100%] 4 of 4, cached: 4 ✔
+[37/525a42] process > NCOV_SIMPLEST_PIPE:recency (2)                     [100%] 2 of 2, cached: 2 ✔
+[70/bd3c82] process > NCOV_SIMPLEST_PIPE:export (2)                      [100%] 2 of 2 ✔
 ```
 
 **ncov-simple.nf**

@@ -19,18 +19,14 @@ include {dataset_get_fasta_gff as download_nextclade_dataset } from "./modules/n
 
 include {index as create_index;
          filter as exclude_outliers;
-         tree_with_exclude as tree ; refine ; ancestral;
-         ancestral as ancestral_unmasked;
-         export } from "./modules/augur.nf"
+         tree_with_exclude as tree ; 
+         refine ; 
+         ancestral_rename as ancestral;
+         ancestral_rename as ancestral_unmasked;
+         export_default_colors as export } from "./modules/augur.nf"
 
 include { nextalign as nextclade;
           nextalign as nextclade_after_mask } from "./modules/nextalign.nf"
-
-//include { subsample_meta;
-//          mask; 
-//          translate;
-//          translate as translate_unmasked;
-//          recency } from "./modules/wrap_bin.nf"
 
 // === Create specialized processes for this workflow
 process pull_ncov_simplest {
@@ -54,7 +50,7 @@ process mk_ncov_simplest_channels {
     path("ncov-simplest-main/data/annotation.gff"),\
     path("ncov-simplest-main/data/exclude_tree_build.txt"),\
     path("ncov-simplest-main/data"),\
-    path("ncov-simplest-main/scripts") // Huh, could also connect code here
+    path("ncov-simplest-main/scripts") // Huh, connect the latest code here
   script:
   """
   """
@@ -69,12 +65,7 @@ process get_build_specific_channels {
   """
 }
 
-// == Try wrapping ncov-simplest scripts here (latest version from the repo)
-//include { subsample_meta;
-//          mask; 
-//          translate;
-//          translate as translate_unmasked;
-//          recency } from "./modules/wrap_bin.nf"
+// == Wrap the ncov-simplest scripts here (latest version from the repo)
 
 process subsample_meta {
   publishDir "${params.outdir}/${build}", mode: 'copy'
@@ -105,7 +96,35 @@ process mask {
   """
 }
 
+process translate {
+  publishDir "${params.outdir}/${build}", mode: 'copy'
+  input: tuple val(build), path(gene_fasta), path(tree), path(reference), path(genemap), val(outfile), path(scripts_dir)
+  output: tuple val(build), path("${outfile}.json")
+  script:
+  """
+  # Only works with S... maybe it's the last gene in annotation?
+  GENE=`cat ${genemap} | awk -F'gene_name=' '{print \$2}' |grep -v "^\$"|tr '\n' ','|sed 's/,\$//g'`
+  python ${scripts_dir}/explicit_translation.py \
+    --tree ${tree} \
+    --annotation ${genemap} \
+    --reference ${reference} \
+    --translations ${gene_fasta} \
+    --genes "S" \
+    --output ${outfile}.json
+  """
+}
 
+process recency {
+  publishDir "${params.outdir}/${build}", mode: 'copy'
+  input: tuple val(build), path(metadata), path(scripts_dir)
+  output: tuple val(build), path("recency.json")
+  script:
+  """
+  python ${scripts_dir}/construct_recency.py \
+    --metadata ${metadata} \
+    --output "recency.json"
+  """
+}
 
 // === Create importable workflow
 workflow NCOV_SIMPLEST_PIPE {
@@ -207,56 +226,61 @@ workflow NCOV_SIMPLEST_PIPE {
       | combine(channel.of("--infer-ambiguous"))
       | combine(channel.of("nt_muts"))
       | ancestral
-      
-    //unmasked_ch = nextclade.out
-    //  | map { n -> [n.get(0), n.get(1)]}
-  //
-    //tree_ch
-    //  | join(unmasked_ch)
-    //  | combine(channel.of("--keep-ambiguous --keep-overhangs"))
-    //  | combine(channel.of("nt_muts_unmasked"))
-    //  | ancestral_unmasked
-  //
-    //nextclade_after_mask.out
-    //  | map { n -> [n.get(0), n.get(2)]}
-    //  | join(tree_ch)
-  ////    | transpose // ["buildname", omicron.gene.XX.fasta, refined_tree.nwk]
-    //  | combine(refseq_ch)
-    //  | combine(genemap_ch)
-    //  | combine(channel.of("aa_muts"))
-    //  | translate // Hmm, I suspect this should happen for all genes
-  //
-    //nextclade.out
-    //  | map { n -> [n.get(0), n.get(2)]}
-    //  | join(tree_ch)
-  ////    | transpose // ["buildname", omicron.gene.XX.fasta, refined_tree.nwk]
-    //  | combine(refseq_ch)
-    //  | combine(genemap_ch)
-    //  | combine(channel.of("aa_muts_unmasked"))
+
+    unmasked_ch = nextclade.out
+      | map { n -> [n.get(0), n.get(1)]}
+  
+    tree_ch
+      | join(unmasked_ch)
+      | combine(channel.of("--keep-ambiguous --keep-overhangs"))
+      | combine(channel.of("nt_muts_unmasked"))
+      | ancestral_unmasked
+
+    one_ch = nextclade_after_mask.out
+      | map { n -> [n.get(0), n.get(2)]}
+      | join(tree_ch)
+  //    | transpose // ["buildname", omicron.gene.XX.fasta, refined_tree.nwk]
+      | combine(refseq_ch)
+      | combine(genemap_ch)
+      | combine(channel.of("aa_muts"))
+    //  | translate 
+
+    two_ch = nextclade.out
+      | map { n -> [n.get(0), n.get(2)]}
+      | join(tree_ch)
+  //    | transpose // ["buildname", omicron.gene.XX.fasta, refined_tree.nwk]
+      | combine(refseq_ch)
+      | combine(genemap_ch)
+      | combine(channel.of("aa_muts_unmasked"))
     //  | translate_unmasked // Hmm, I suspect this should happen for all genes
-    //
-    //join_ref_meta.out
-    //  | recency
-    //
+
+    one_ch 
+      | concat (two_ch)
+      | combine(scripts_ch)
+      | translate
+
+    join_ref_meta.out
+      | combine(scripts_ch)
+      | recency
+    
     //// combine all node data by build
-    //node_data_ch = branch_length_ch
-    //  | join(ancestral.out)
-    //  | join(ancestral_unmasked.out)
-    //  | join(translate.out)
-    //  | join(translate_unmasked.out)
-    //  | join(recency.out)
-    //  | map {n -> [n.get(0), n.drop(1) ]}
-  //
-    //// Generate final json file for nextstrain view
-    //tree_ch
-    //  | join(join_ref_meta.out)
-    //  | join(node_data_ch)
-    //  | combine(latlong_ch)
-    //  | join(auspice_cfg_ch)
-    //  | export
+    node_data_ch = branch_length_ch
+      | join(ancestral.out)
+      | join(ancestral_unmasked.out)
+      | join(translate.out)
+      | join(recency.out)
+      | map {n -> [n.get(0), n.drop(1) ]}
+  
+    // Generate final json file for nextstrain view
+    tree_ch
+      | join(join_ref_meta.out)
+      | join(node_data_ch)
+      | combine(latlong_ch)
+      | join(auspice_cfg_ch)
+      | export
   
   emit:
-    pull_ncov_simplest.out
+    export.out
 }
 
 // Similar to the if __main__ in python, call the workflow
