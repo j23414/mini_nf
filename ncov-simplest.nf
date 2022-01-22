@@ -1,4 +1,5 @@
 #! /usr/bin/env nextflow
+// Assuming all dependencies are installed (seqkit, ebay tsv-filter, fuzzywuzzy, click) and on PATH
 
 nextflow.enable.dsl=2
 

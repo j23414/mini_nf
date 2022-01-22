@@ -186,6 +186,8 @@ Succeeded   : 11
 
 **ncov-simplest.nf**
 
+Assuming all dependencies are installed (seqkit, ebay tsv-filter, fuzzywuzzy, click) and on PATH
+
 ```
 nextflow run ncov-simplest.nf
 
@@ -219,5 +221,49 @@ executor >  local (6)
 [37/525a42] process > NCOV_SIMPLEST_PIPE:recency (2)                     [100%] 2 of 2, cached: 2 ✔
 [70/bd3c82] process > NCOV_SIMPLEST_PIPE:export (2)                      [100%] 2 of 2 ✔
 ```
+
+View the results
+
+```
+nextstrain view results_build/auspice/
+```
+
+```
+ls -1tr results_build
+
+results_build/
+  |_ downloads/
+  |  |_ lat_longs.tsv
+  |  |_ metadata.tsv.gz
+  |  |_ sequences.fasta.xz
+  |
+  |_ sars-cov-2/
+  |
+  |_ gisaid.index
+  |_ gisaid.fasta.gz
+  |
+  |_ Omicron/
+  |  |_ metadata_omicron.tsv
+  |  |_ omicron_strain_names.txt
+  |  |_ gisaid.fasta.gz
+  |
+  |_ 21K/
+  |  |_ nextclade/
+  |  |_ metadata.tsv
+  |  |_ tree_raw.nwk
+  |  |_ tree.nwk
+  |  |_ ...
+  |
+  |_ 21L/ 
+  |
+  |_ auspice/
+  |  |_ 21K.json
+  |  |_ 21L.json
+  |
+  |_ report.html
+  |_ timeline.html
+```
+ 
+* [ ] what's happening with translate (should this be all genes?)
 
 **ncov-simple.nf**
