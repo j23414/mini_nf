@@ -1,5 +1,7 @@
 # mini_nf
 
+<details><summary>prior notes</summary>
+
 ```
 # Test run
 nextflow run main.nf -stub-run
@@ -152,6 +154,8 @@ work/
       |_ .command.err        #<= check these files to debug
       |_ .command.out
 ```
+
+</details>
 
 ## Other Workflows
 
