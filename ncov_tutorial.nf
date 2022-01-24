@@ -5,7 +5,10 @@
 
 nextflow.enable.dsl=2
 
-include { aws_s3_cp } from "./modules/downloads.nf"
+include { aws_s3_cp as download_metadata;
+          aws_s3_cp as download_alignment } from "./modules/downloads.nf"
+
+include {xz_fasttree as fasttree} from "./modules/fasttree.nf"
 
 process summarize_metadata {
   publishDir "${params.outdir}/00_CreateContext", mode: 'copy'
@@ -27,10 +30,17 @@ workflow {
   metadata_ch = 
     channel.of("metadata.tsv.xz","s3://nextstrain-data/files/ncov/open/global/metadata.tsv.xz")
     .collate(2)
-    | aws_s3_cp
+    | download_metadata
   // Preferentially use xz over gz, but then will need `xzcat` or `gzcat` commands in steps... hmm, will need to think.
   metadata_ch 
     | summarize_metadata
+
+  // Wait a second, number of sequences seems low
+  alignment_ch =
+    channel.of("aligned.fasta.xz","s3://nextstrain-data/files/ncov/open/global/aligned.fasta.xz")
+    .collate(2)
+    | download_alignment
+    | fasttree
 
   /* Step 2 - pick some focal sequences? (washington state, same as tutorial, I think) */
 
