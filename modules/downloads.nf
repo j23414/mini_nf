@@ -10,6 +10,7 @@ process aws_s3_cp {
   output: path("${filename}")
   """
   #! /usr/bin/env bash
+  # TODO: derive filename from the s3url
   aws s3 cp ${s3url} ${filename}
   """
 }
