@@ -48,7 +48,7 @@ def run_shell_command_n_times(cmd, msg, cleanup_failed_cmd, retry_num=5):
         print(msg + f" has FAILED {retry_num} times. Exiting.")
         raise Exception("function run_shell_command_n_times has failed")
 
-rule download_main_ndjson:
+rule download_main_ndjson: # JC
     message:
         """Fetching data using the database API"""
     params:
@@ -112,7 +112,7 @@ rule upload_raw_ndjson:
         for remote, local in input.items():
             shell("./bin/upload-to-s3 {params.quiet} {local:q} {params.s3_bucket:q}/{remote:q}")
 
-rule transform_biosample:
+rule transform_biosample: //JC
     input:
         biosample = "data/biosample.ndjson"
     output:

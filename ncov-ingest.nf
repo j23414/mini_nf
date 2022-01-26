@@ -14,23 +14,55 @@ process pull_ncov_ingest {
 }
 
 // Fetch from s3, but should include fetch new
-process fetch_from_biosample {
+// rules: download_main_ndjson, download_biosample
+// s3://nextstrain-data/files/ncov/open/biosample.ndjson.xz,
+// s3://nextstrain-data/files/ncov/open/genbank.ndjson.xz,
+// s3://nextstrain-ncov-private/gisaid.ndjson.xz
+process download_s3 {
   publishDir "${params.outdir}/Downloads", mode: 'copy'
-  input: path(scripts)
-  output: path("data/biosample.ndjson.xz")
+  input: tuple val(s3_address), path(scripts)
+  output: path("*.xz") // Hope this catches everything.
   script:
   """
-  #bash ${scripts}/fetch-from-biosample
-  mkdir data
-  bash ${scripts}/download-from-s3 s3://nextstrain-data/files/ncov/open/biosample.ndjson.xz data/biosample.ndjson.xz
+  OUTFILE=`echo "${s3_address}" | sed 's:.*/::g'`
+  bash ${scripts}/download-from-s3 \
+    s3://nextstrain-data/files/ncov/open/biosample.ndjson.xz \
+    \${OUTFILE}
+  """
+}
+
+process transform_biosample {
+  publishDir "${params.outdir}/data/genbank", mode: 'copy'
+  input: tuple path(biosample_ndjson), path(scripts)
+  output: path("${biosample_ndjson.simpleName}.tsv")
+  script:
+  """
+  python ${scripts}/transform-biosample \
+    ${biosample_ndjson} \
+    --output ${biosample_ndjson.simpleName}.tsv
   """
 }
 
 workflow NCOV_INGEST_PIPE {
   main:
+    // Fetch ncov-ingest repo and bin folder
     ncov_ingest_ch = pull_ncov_ingest
     bin_ch = ncov_ingest_ch | map { n -> n.get(1) }
-    out_ch = bin_ch | fetch_from_biosample | view
+
+    // Fetch biosample, genbank, gisaid
+    channel.of(
+        "s3://nextstrain-data/files/ncov/open/biosample.ndjson.xz",
+        "s3://nextstrain-data/files/ncov/open/genbank.ndjson.xz",
+        "s3://nextstrain-ncov-private/gisaid.ndjson.xz")
+      | combine(bin_ch)
+      | download_s3
+      | view
+
+    out_ch = 
+      download_s3.out
+      | filter({ it =~ /biosample/})
+      | combine(bin_ch)
+      | transform_biosample
 
   emit:
     out_ch
