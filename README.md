@@ -281,3 +281,28 @@ executor >  local (1)
 [1b/dfdc9d] process > NCOV_INGEST_PIPE:pull_ncov_ingest     [100%] 1 of 1, cached: 1 ✔
 [5f/2afc78] process > NCOV_INGEST_PIPE:fetch_from_biosample [100%] 1 of 1 ✔
 ```
+
+**run_octoFLU.nf**
+
+```
+nextflow run PATH/TO/mini_nf/run_octoflu.nf \
+  --query_fasta input.fasta \
+  -resume
+
+N E X T F L O W  ~  version 21.10.6
+Launching `/Users/jenchang/github/j23414/mini_nf/run_octoflu.nf` [magical_fermi] - revision: 234c78072f
+[07/0ab44b] process > run_octoFLU (1) [100%] 1 of 1, ✔
+```
+
+results
+
+```
+Downloads/octoFLU-master/input.fasta_output/
+  |_ H3.tre  #<= check quality of tree
+  |_ H3_aln.fa
+  |_ N2.tre   
+  |_ N2_aln.fa
+  |_ ... other 6 segments
+  |_ blast_output.txt
+  |_ input.fasta_Final_Output.txt #<= clade assignments
+```

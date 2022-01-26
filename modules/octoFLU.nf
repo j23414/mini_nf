@@ -5,7 +5,7 @@ nextflow.enable.dsl=2
 process run_octoFLU {
   publishDir "${params.outdir}/Downloads", mode: 'copy'
   input: path(input_fasta)
-  output: path("${input_fasta}_output")
+  output: path("octoFLU-master/${input_fasta}_output")
   script:
   """
   #! /usr/bin/env bash
