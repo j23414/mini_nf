@@ -270,4 +270,14 @@ results_build/
  
 * [ ] what's happening with translate (should this be all genes?)
 
-**ncov-simple.nf**
+**ncov-ingest.nf**
+
+```
+nextflow run ncov-ingest.nf -resume
+
+N E X T F L O W  ~  version 21.10.6
+Launching `ncov-ingest.nf` [awesome_archimedes] - revision: b322d1ecd1
+executor >  local (1)
+[1b/dfdc9d] process > NCOV_INGEST_PIPE:pull_ncov_ingest     [100%] 1 of 1, cached: 1 ✔
+[5f/2afc78] process > NCOV_INGEST_PIPE:fetch_from_biosample [100%] 1 of 1 ✔
+```

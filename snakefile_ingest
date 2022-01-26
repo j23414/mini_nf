@@ -75,7 +75,7 @@ rule download_main_ndjson:
             """)
 
 
-rule download_biosample:
+rule download_biosample: # JC: Either fetch new, or pull from s3
     message:
         """Obtaining Biosample data (GenBank only)"""
     params:
