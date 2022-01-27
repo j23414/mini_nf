@@ -5,6 +5,8 @@ nextflow.enable.dsl=2
 // Equivalent to "download_sequences" and "download_metadata"
 // Bit dangerous, should only pull 3 per minute...
 process aws_s3_cp {
+  //executor.queueSize = 1
+  pollInterval = '30 sec'
   publishDir "${params.outdir}/downloads", mode: 'copy'
   input: tuple val(filename), val(s3url)
   output: path("${filename}")
