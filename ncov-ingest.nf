@@ -4,7 +4,12 @@ nextflow.enable.dsl=2
 
 process pull_ncov_ingest {
   publishDir "${params.outdir}/Downloads", mode: 'copy'
-  output: tuple path("ncov-ingest-master"), path("ncov-ingest-master/bin"), path("ncov-ingest-master/data")
+
+  output: tuple path("ncov-ingest-master"), \
+          path("ncov-ingest-master/bin"), \
+          path("ncov-ingest-master/lib"),\
+          path("ncov-ingest-master/data")
+  
   script:
   """
   #! /usr/bin/env bash
@@ -33,7 +38,7 @@ process download_s3 {
 
 process transform_biosample {
   publishDir "${params.outdir}/data/genbank", mode: 'copy'
-  input: tuple path(biosample_ndjson), path(scripts)
+  input: tuple path(biosample_ndjson), path(scripts), path(libs)
   output: path("${biosample_ndjson.simpleName}.tsv")
   script:
   """
@@ -46,8 +51,9 @@ process transform_biosample {
 workflow NCOV_INGEST_PIPE {
   main:
     // Fetch ncov-ingest repo and bin folder
-    ncov_ingest_ch = pull_ncov_ingest
+    ncov_ingest_ch = pull_ncov_ingest()
     bin_ch = ncov_ingest_ch | map { n -> n.get(1) }
+    lib_ch = ncov_ingest_ch | map { n -> n.get(2) } // Wow, need this for util errors
 
     // Fetch biosample, genbank, gisaid
     channel.of(
@@ -62,6 +68,7 @@ workflow NCOV_INGEST_PIPE {
       download_s3.out
       | filter({ it =~ /biosample/})
       | combine(bin_ch)
+      | combine(lib_ch)
       | transform_biosample
 
   emit:
