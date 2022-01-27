@@ -10,6 +10,8 @@ include { aws_s3_cp as download_metadata;
 
 include {xz_fasttree as fasttree} from "./modules/fasttree.nf"
 
+include {gz_to_xz} from "./modules/unix.nf"
+
 process summarize_metadata {
   publishDir "${params.outdir}/00_CreateContext", mode: 'copy'
   input: path(metadata_tsv_xz)
@@ -33,16 +35,19 @@ workflow {
       "metadata.tsv.gz","s3://nextstrain-data/files/ncov/open/metadata.tsv.gz")
     .collate(2)
     | download_metadata
-  // Preferentially use xz over gz, but then will need `xzcat` or `gzcat` commands in steps... hmm, will need to think.
-  metadata_ch 
-    | summarize_metadata
+
+  gz_ch = metadata_ch | filter({ it =~ /.gz$/}) | gz_to_xz
+  xz_ch = metadata_ch | filter({ it =~ /.xz$/}) | concat(gz_ch) 
+
+  xz_ch 
+    | summarize_metadata 
 
   // Wait a second, number of sequences seems low
   // Yup, subsampled: https://docs.nextstrain.org/projects/ncov/en/latest/reference/remote_inputs.html
-  alignment_ch =
-    channel.of("aligned.fasta.xz","s3://nextstrain-data/files/ncov/open/global/aligned.fasta.xz")
-    .collate(2)
-    | download_alignment
+  // alignment_ch =
+  //   channel.of("aligned.fasta.xz","s3://nextstrain-data/files/ncov/open/global/aligned.fasta.xz")
+  //   .collate(2)
+  //   | download_alignment
 //    | fasttree
 
   /* Step 2 - pick some focal sequences? (washington state, same as tutorial, I think) */

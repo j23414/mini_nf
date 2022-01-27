@@ -42,6 +42,6 @@ process gz_to_xz {
   """
   #! /usr/bin/env bash
   ORIGSUM=\$(gzip -dc ${file_gz} | tee >(xz > ${file_gz.simpleName}.xz) | sha1sum )
-  NEWSUM=\$(unxz -c ${file_xz} | sha1sum)
+  NEWSUM=\$(unxz -c ${file_gz.simpleName}.xz} | sha1sum)
   """
 }
