@@ -1,5 +1,7 @@
 # mini_nf
 
+* Pytest for nextflow - https://nf-co.re/events/2021/bytesize-17-pytest-workflow
+
 <details><summary>prior notes</summary>
 
 ```
