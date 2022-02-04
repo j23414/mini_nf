@@ -2,6 +2,10 @@
 
 * Pytest for nextflow - https://nf-co.re/events/2021/bytesize-17-pytest-workflow
 * Nope, try to find a cram tests instead
+* Nextflow Tower - https://cloud.tower.nf/
+  * Computing options
+
+![](docs/nftower_compute.png)
 
 <details><summary>prior notes</summary>
 
