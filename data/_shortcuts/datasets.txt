@@ -66,6 +66,9 @@ files/ncov/open/nextclade-full-run-2022-01-24--21-37-08--UTC/nextclade.tsv.gz
 files/ncov/open/nextclade-full-run-2022-02-04--05-06-31--UTC/aligned.fasta.xz
 files/ncov/open/nextclade-full-run-2022-02-04--05-06-31--UTC/mutation-summary.tsv.xz
 files/ncov/open/nextclade-full-run-2022-02-04--05-06-31--UTC/nextclade.tsv.gz
+files/ncov/open/nextclade-full-run-2022-02-07--16-37-41--UTC/aligned.fasta.xz
+files/ncov/open/nextclade-full-run-2022-02-07--16-37-41--UTC/mutation-summary.tsv.xz
+files/ncov/open/nextclade-full-run-2022-02-07--16-37-41--UTC/nextclade.tsv.gz
 files/ncov/open/nextclade.tsv.gz
 files/ncov/open/north-america/aligned.fasta.xz
 files/ncov/open/north-america/metadata.tsv.xz
