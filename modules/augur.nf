@@ -4,146 +4,145 @@ nextflow.enable.dsl=2
 
 // ==== Individual Processes
 process index {
-    label 'nextstrain'
-    publishDir "${params.outdir}/${build}", mode: 'copy'
-    input: tuple val(build), path(sequences)
-    output: tuple val(build), path("$sequences"), path("${sequences.simpleName}_index.tsv")
-    script:
-    """
-    #! /usr/bin/env bash
-    ${augur_app} index \
-      --sequences ${sequences} \
-      --output ${sequences.simpleName}_index.tsv
-    """
-    stub:
-    """
-    touch ${sequences.simpleName}_index.tsv
-    """
+  label 'nextstrain'
+  publishDir "${params.outdir}/${build}", mode: 'copy'
+  input: tuple val(build), path(sequences)
+  output: tuple val(build), path("$sequences"), path("${sequences.simpleName}_index.tsv")
+  script:
+  """
+  #! /usr/bin/env bash
+  ${augur_app} index \
+    --sequences ${sequences} \
+    --output ${sequences.simpleName}_index.tsv
+  """
+  stub:
+  """
+  touch ${sequences.simpleName}_index.tsv
+  """
 }
 
 // args = "--group-by country year month --sequences-per-group 20 --min-date 2012"
 // tuple val(build), path(metadata), path(exclude), path(sequences), path(sequence_index)
 process filter {
-    label 'nextstrain'
-    publishDir "${params.outdir}/${build}", mode: 'copy'
-    input: tuple val(build), path(sequences), path(sequence_index), path(metadata), path(exclude), val(args)
-    output: tuple val(build), path("${sequences.simpleName}_filtered.fasta")
-    script:
-    """
-    ${augur_app} filter \
-        --sequences ${sequences} \
-        --sequence-index ${sequence_index} \
-        --metadata ${metadata} \
-        --exclude ${exclude} \
-        --output ${sequences.simpleName}_filtered.fasta \
-        ${args}
-    """
-    stub:
-    """
-    touch "${sequences.simpleName}_filtered.fasta"
-    """
+  label 'nextstrain'
+  publishDir "${params.outdir}/${build}", mode: 'copy'
+  input: tuple val(build), path(sequences), path(sequence_index), path(metadata), path(exclude), val(args)
+  output: tuple val(build), path("${sequences.simpleName}_filtered.fasta")
+  script:
+  """
+  ${augur_app} filter \
+      --sequences ${sequences} \
+      --sequence-index ${sequence_index} \
+      --metadata ${metadata} \
+      --exclude ${exclude} \
+      --output ${sequences.simpleName}_filtered.fasta \
+      ${args}
+  """
+  stub:
+  """
+  touch "${sequences.simpleName}_filtered.fasta"
+  """
 }
 
 // args = "--fill-gaps"
 process align {
-    label 'nextstrain'
-    publishDir "${params.outdir}/${build}", mode: 'copy'
-    input: tuple val(build), path(filtered), path(reference), val(args)
-    output: tuple val(build), path("${filtered.simpleName}_aligned.fasta")
-    script:
-    """
-    ${augur_app} align \
-        --sequences ${filtered} \
-        --reference-sequence ${reference} \
-        --output ${filtered.simpleName}_aligned.fasta \
-        ${args}
-    """
-    stub:
-    """
-    touch ${filtered.simpleName}_aligned.fasta
-    """
-
+  label 'nextstrain'
+  publishDir "${params.outdir}/${build}", mode: 'copy'
+  input: tuple val(build), path(filtered), path(reference), val(args)
+  output: tuple val(build), path("${filtered.simpleName}_aligned.fasta")
+  script:
+  """
+  ${augur_app} align \
+      --sequences ${filtered} \
+      --reference-sequence ${reference} \
+      --output ${filtered.simpleName}_aligned.fasta \
+      ${args}
+  """
+  stub:
+  """
+  touch ${filtered.simpleName}_aligned.fasta
+  """
 }
 
 // args=""
 process tree {
-    label 'nextstrain'
-    publishDir "${params.outdir}/${build}", mode: 'copy'
-    input: tuple val(build), path(aligned), val(args)
-    output: tuple val(build), path("${aligned.simpleName}_raw.nwk")
-    script:
-    """
-    ${augur_app} tree \
-        --alignment ${aligned} \
-        --output ${aligned.simpleName}_raw.nwk \
-        ${args}
-    """
-    stub:
-    """
-    touch ${aligned.simpleName}_raw.nwk
-    """
+  label 'nextstrain'
+  publishDir "${params.outdir}/${build}", mode: 'copy'
+  input: tuple val(build), path(aligned), val(args)
+  output: tuple val(build), path("${aligned.simpleName}_raw.nwk")
+  script:
+  """
+  ${augur_app} tree \
+      --alignment ${aligned} \
+      --output ${aligned.simpleName}_raw.nwk \
+      ${args}
+  """
+  stub:
+  """
+  touch ${aligned.simpleName}_raw.nwk
+  """
 }
 
 // Hmm figure out arguments string and connecting passed files, this is a hack for now
 process tree_with_exclude {
-    label 'nextstrain'
-    publishDir "${params.outdir}/${build}", mode: 'copy'
-    input: tuple val(build), path(aligned), val(args), path(exclude_sites)
-    output: tuple val(build), path("${aligned.simpleName}_raw.nwk")
-    script:
-    """
-    ${augur_app} tree \
-        --alignment ${aligned} \
-        --output ${aligned.simpleName}_raw.nwk \
-        ${args} \
-        --exclude-sites ${exclude_sites}
-    """
-    stub:
-    """
-    touch ${aligned.simpleName}_raw.nwk
-    """
+  label 'nextstrain'
+  publishDir "${params.outdir}/${build}", mode: 'copy'
+  input: tuple val(build), path(aligned), val(args), path(exclude_sites)
+  output: tuple val(build), path("${aligned.simpleName}_raw.nwk")
+  script:
+  """
+  ${augur_app} tree \
+      --alignment ${aligned} \
+      --output ${aligned.simpleName}_raw.nwk \
+      ${args} \
+      --exclude-sites ${exclude_sites}
+  """
+  stub:
+  """
+  touch ${aligned.simpleName}_raw.nwk
+  """
 }
 
 // args= "--timetree --coalescent opt --date-confidence --date-inference marginal --clock-filter-iqd 4"
 process refine {
-    label 'nextstrain'
-    publishDir "${params.outdir}/$build", mode: 'copy'
-    input: tuple val(build), path(tree_raw), path(aligned), path(metadata), val(args)
-    output: tuple val(build), path("${tree_raw.simpleName.replace('_raw','')}.nwk"), path("${tree_raw.simpleName.replace('_raw','')}_branch_lengths.json")
-    script:
-    """
-    ${augur_app} refine \
-        --tree ${tree_raw} \
-        --alignment ${aligned} \
-        --metadata ${metadata} \
-        --output-tree ${tree_raw.simpleName.replace('_raw','')}.nwk \
-        --output-node-data ${tree_raw.simpleName.replace('_raw','')}_branch_lengths.json \
-        ${args}
-    """
-    stub:
-    """
-    touch ${tree_raw.simpleName.replace('_raw','')}.nwk ${tree_raw.simpleName.replace('_raw','')}_branch_lengths.json
-    """
+  label 'nextstrain'
+  publishDir "${params.outdir}/$build", mode: 'copy'
+  input: tuple val(build), path(tree_raw), path(aligned), path(metadata), val(args)
+  output: tuple val(build), path("${tree_raw.simpleName.replace('_raw','')}.nwk"), path("${tree_raw.simpleName.replace('_raw','')}_branch_lengths.json")
+  script:
+  """
+  ${augur_app} refine \
+      --tree ${tree_raw} \
+      --alignment ${aligned} \
+      --metadata ${metadata} \
+      --output-tree ${tree_raw.simpleName.replace('_raw','')}.nwk \
+      --output-node-data ${tree_raw.simpleName.replace('_raw','')}_branch_lengths.json \
+      ${args}
+  """
+  stub:
+  """
+  touch ${tree_raw.simpleName.replace('_raw','')}.nwk ${tree_raw.simpleName.replace('_raw','')}_branch_lengths.json
+  """
 }
 
 // args="--inference joint"
 process ancestral {
-    label 'nextstrain'
-    publishDir "${params.outdir}/${build}", mode: 'copy'
-    input: tuple val(build), path(tree), path(aligned), val(args)
-    output: tuple val(build), path("${tree.simpleName}_nt_muts.json")
-    script:
-    """
-    ${augur_app} ancestral \
-        --tree ${tree} \
-        --alignment ${aligned} \
-        --output-node-data ${tree.simpleName}_nt_muts.json \
-        ${args}
-    """
-    stub:
-    """
-    touch ${tree.simpleName}_nt_muts.json
-    """
+  label 'nextstrain'
+  publishDir "${params.outdir}/${build}", mode: 'copy'
+  input: tuple val(build), path(tree), path(aligned), val(args)
+  output: tuple val(build), path("${tree.simpleName}_nt_muts.json")
+  script:
+  """
+  ${augur_app} ancestral \
+      --tree ${tree} \
+      --alignment ${aligned} \
+      --output-node-data ${tree.simpleName}_nt_muts.json \
+      ${args}
+  """
+  stub:
+  """
+  touch ${tree.simpleName}_nt_muts.json
+  """
 }
 
 process ancestral_rename {
