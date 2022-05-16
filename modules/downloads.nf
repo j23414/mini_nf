@@ -10,10 +10,23 @@ process aws_s3_cp {
   publishDir "${params.outdir}/downloads", mode: 'copy'
   input: tuple val(filename), val(s3url)
   output: path("${filename}")
+  script:
   """
   #! /usr/bin/env bash
   # TODO: derive filename from the s3url
   aws s3 cp ${s3url} ${filename}
+  """
+}
+
+// Prefer https over s3 unless neeed something special about s3
+process wget_file {
+  publishDir "${params.outdir}/downloads", mode: 'copy'
+  input: tuple val(filename), val(https_url)
+  output: path("${filename}")
+  script:
+  """
+  #! /usr/bin/env bash
+  wget -O ${filename} ${https_url}
   """
 }
 

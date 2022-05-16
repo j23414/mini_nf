@@ -3,6 +3,23 @@
 nextflow.enable.dsl=2
 
 // ==== Individual Processes
+// fasta_fields="strain strain_name segment date host country subtype virus"
+process parse {
+  label 'nextstrain'
+  publishDir "${params.outdir}/${build}", mode: 'copy'
+  input: tuple val (build), path(fasta), val(fasta_fields)
+  output: tuple path("sequences.fasta"), path("metadata.tsv")
+  script:
+  """
+  #! /usr/bin/env bash
+  ${augur_app} parse \
+    --sequences ${fasta} \
+    --output-sequences sequences.fasta \
+    --output-metadata metadata.tsv \
+    --fields ${fasta_fields}
+  """
+}
+
 process index {
   label 'nextstrain'
   publishDir "${params.outdir}/${build}", mode: 'copy'
@@ -33,6 +50,26 @@ process filter {
   ${augur_app} filter \
       --sequences ${sequences} \
       --sequence-index ${sequence_index} \
+      --metadata ${metadata} \
+      --exclude ${exclude} \
+      --output ${sequences.simpleName}_filtered.fasta \
+      ${args}
+  """
+  stub:
+  """
+  touch "${sequences.simpleName}_filtered.fasta"
+  """
+}
+
+process filter2 {
+  label 'nextstrain'
+  publishDir "${params.outdir}/${build}", mode: 'copy'
+  input: tuple val(build), path(sequences), path(metadata), path(exclude), val(args)
+  output: tuple val(build), path("${sequences.simpleName}_filtered.fasta")
+  script:
+  """
+  ${augur_app} filter \
+      --sequences ${sequences} \
       --metadata ${metadata} \
       --exclude ${exclude} \
       --output ${sequences.simpleName}_filtered.fasta \
@@ -250,6 +287,34 @@ process export_default_colors {
         --lat-longs ${lat_longs} \
         --auspice-config ${auspice_config} \
         --output auspice/${build}.json
+    cp auspice/${build}.json .
+    """
+    stub:
+    """
+    mkdir auspice
+    touch auspice/${tree.simpleName}.json
+    """
+}
+
+/* need to get this general purpose */
+process export_rsv {
+    label 'nextstrain'
+    publishDir("${params.outdir}/auspice"), mode: 'copy'
+    input: tuple val(build), path(tree), path(metadata), path(node_data), \
+      path(auspice_config), path(description), val(args)
+    output: tuple val("${build}"), path("${build}.json")
+    script:
+    """
+    export AUGUR_RECURSION_LIMIT=10000;
+    ${augur_app} export v2 \
+        --tree ${tree} \
+        --metadata ${metadata} \
+        --node-data ${node_data} \
+        --auspice-config ${auspice_config} \
+        --description ${description} \
+        --output auspice/${build}.json \
+        ${args}
+
     cp auspice/${build}.json .
     """
     stub:

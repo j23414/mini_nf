@@ -76,3 +76,31 @@ process build_params {
   json_paramstr.py old.json new.json
   """
 }
+
+process format_downloaded_genomes {
+  publishDir "${params.outdir}/00_PrepData", mode: 'copy'
+  input: tuple path(in_fasta), val(out_fasta)
+  output: path("${out_fasta}")
+  script:
+  """
+  #! /usr/bin/env bash
+  format_downloaded_genomes.py \
+    --in_fasta ${in_fasta} \
+    --out_fasta ${out_fasta}
+  """
+}
+
+process label_rsv_subtypes {
+  publishDir "${params.outdir}/00_PrepData", mode: 'copy'
+  input: tuple path(rsv_json), val(rsv_fasta)
+  output: tuple path("rsv_A_genome.fasta"), path("rsv_B_genome.fasta")
+  script:
+  """
+  #! /usr/bin/env bash
+  label_rsv_subtypes.py \
+    --tree_json ${rsv_json} \
+    --data_file ${rsv_fasta}
+  """
+}
+
+
