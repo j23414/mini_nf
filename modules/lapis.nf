@@ -66,3 +66,19 @@ process fasta_aligned {
   curl "https://lapis.cov-spectrum.org/open/v1/sample/fasta-aligned?${query}" > ${results_file}
   """
 }
+
+/* Neat scripts */
+process plot_the_global_distribution_of_all_sequences {
+  publishDir "${params.outdir}/lapis_output", mode: 'copy'
+  output: path("plot.pdf") /* sequences.fasta, metadata.tsv */
+  script:
+  """
+  #! /usr/bin/env bash
+  # Could also swap this to an Rscript (#! /usr/bin/env Rscript)
+  # Yeah this needs to be parameterized to pass in customized queries
+  # Set up reasonable width, height
+  # Or just move the ggplot to its own module
+  # Or read in from the other processes
+  ./plot-the-global-distribution-of-all-sequences.R
+  """
+}
