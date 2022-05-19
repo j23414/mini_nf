@@ -313,3 +313,36 @@ Downloads/octoFLU-master/input.fasta_output/
   |_ blast_output.txt
   |_ input.fasta_Final_Output.txt #<= clade assignments
 ```
+
+## rsv
+
+```
+(nextstrain) mini_nf % nextflow run rsv.nf -resume
+N E X T F L O W  ~  version 21.10.6
+Launching `rsv.nf` [silly_ardinghelli] - revision: a56fd99116
+executor >  local (13)
+[74/197ec1] process > fetch_config_files            [100%] 1 of 1, cached: 1 ✔
+[e0/4d31c2] process > vipr_fetch_rsv (1)            [100%] 1 of 1, cached: 1 ✔
+[62/c1f140] process > subset_to_small (1)           [100%] 1 of 1 ✔
+[f1/c5a778] process > format_downloaded_genomes (1) [100%] 1 of 1 ✔
+[8d/5b65c8] process > parse (1)                     [100%] 1 of 1 ✔
+[8b/8176a4] process > filter (1)                    [100%] 1 of 1 ✔
+[3a/a2e309] process > align (1)                     [100%] 1 of 1 ✔
+[e1/9024b6] process > tree (1)                      [100%] 1 of 1 ✔
+[fb/4f52d8] process > refine (1)                    [100%] 1 of 1 ✔
+[93/3836e0] process > ancestral (1)                 [100%] 1 of 1 ✔
+[82/96e95d] process > translate (1)                 [100%] 1 of 1 ✔
+[6a/c09a99] process > export (1)                    [100%] 1 of 1 ✔
+[c6/512661] process > label_rsv_subtypes (1)        [100%] 1 of 1 ✔
+[98/421d58] process > mafft (1)                     [100%] 2 of 2 ✔
+[/Users/jenchang/github/j23414/mini_nf/work/36/cc5e6b5545ee6da0531ee848332af6/rsv_B_genome_aln.fna, F]
+[/Users/jenchang/github/j23414/mini_nf/work/36/cc5e6b5545ee6da0531ee848332af6/rsv_B_genome_aln.fna, G]
+[/Users/jenchang/github/j23414/mini_nf/work/98/421d5872a6fed8a5b1374d16017842/rsv_A_genome_aln.fna, F]
+[/Users/jenchang/github/j23414/mini_nf/work/98/421d5872a6fed8a5b1374d16017842/rsv_A_genome_aln.fna, G]
+WARN: Task runtime metrics are not reported when using macOS without a container engine
+Completed at: 19-May-2022 17:34:29
+Duration    : 4m
+CPU hours   : 0.1 (39.5% cached)
+Succeeded   : 13
+Cached      : 2
+```

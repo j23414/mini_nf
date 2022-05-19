@@ -1,5 +1,5 @@
 #! /usr/bin/env nextflow
-
+// USAGE: nextflow run rsv.nf -resume
 nextflow.enable.dsl=2
 
 /* include nf modules */
@@ -22,19 +22,23 @@ process fetch_config_files {
   """
 }
 
-// process small_sample {
-//   output: path("small.fasta")
-//   script:
-//   """
-//   # Known A
-//   smof grep KY883566 data/all_vipr_download.fasta > small.fasta
-//   # Known B
-//   smof grep KU950682 data/all_vipr_download.fasta >> small.fasta
-//   smof grep LC474554 data/all_vipr_download.fasta >> small.fasta
-//   smof filter -l 5000 data/all_vipr_download.fasta >> length.fasta
-//   smof head -n 100 length.fasta >> small.fasta
-//   """
-// }
+process subset_to_small {
+  input: path(in_fasta)
+  output: path("${in_fasta}")
+  script:
+  """
+  # Filter to length
+  smof filter -l 5000 ${in_fasta} > length.fasta
+  smof head -n 100 length.fasta > small.fasta
+   # Known A
+  smof grep KY883566 ${in_fasta} >> small.fasta
+  # Known B
+  smof grep KY883569 ${in_fasta} >> small.fasta
+  #smof grep KU950682 ${in_fasta} >> small.fasta
+  #smof grep LC474554 ${in_fasta} >> small.fasta
+  cp small.fasta ${in_fasta}
+  """
+}
 
 /* main method */
 workflow {
@@ -48,6 +52,7 @@ workflow {
   /* eventually fetch from api, instead of manual process */
   channel.of("vipr_download.fasta")
    | vipr_fetch_rsv
+   | subset_to_small
   /* read from param */
   // channel.fromPath("./data/vipr_download.fasta")
    | combine(channel.of("rsv.fasta"))
