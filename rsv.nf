@@ -8,6 +8,7 @@ include { vipr_fetch_rsv } from './modules/vipr.nf'
 include {format_downloaded_genomes; label_rsv_subtypes} from './modules/wrap_bin.nf'
 include { parse; index; filter2 as filter; align; tree; refine; ancestral; translate; traits; export_rsv as export } from './modules/augur.nf'
 include { mafft } from './modules/fasttree.nf'
+include {stat_length as smof_length} from './modules/smof.nf'
 
 /* include config files from repo */
 /* dropped_strains.txt is empty */
@@ -73,6 +74,12 @@ workflow {
    | combine( parse.out | map {n-> n.get(1)} )
    | combine(channel.of(" --timetree --coalescent opt --date-confidence --date-inference marginal --clock-filter-iqd 4 "))
    | refine
+
+  /* alternative metadata route */
+  vipr_fetch_rsv.out 
+   | combine(channel.of("rsv_headersAndLengths.tsv"))
+   | smof_length
+   // | wrapped metadata merge, cache old values, flag entries for manual curation
 
   refine_tree_ch = refine.out | map {n -> [n.get(0), n.get(1)]}
   branch_lengths_ch = refine.out | map {n -> [n.get(0), n.get(2)]}

@@ -28,3 +28,12 @@ process head {
   smof head -n ${count} ${sequence_fasta} > ${filename}
   """
 }
+
+process stat_length {
+  input: tuple path(sequence_fasta), val(filename)
+  output: path("${filename}") // tsv file
+  script:
+  """
+  smof stat -lq ${sequence_fasta} > ${filename}
+  """
+}
