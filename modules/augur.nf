@@ -348,8 +348,8 @@ process export_mkpx {
       path(node_data), \
       path(colors), \
       path(lat_longs), \
-      path(description) \
-      path(auspice_config) \
+      path(description), \
+      path(auspice_config), \
       val(args)
     output: tuple val(build), path("auspice")
     script:
