@@ -101,6 +101,22 @@ process align {
   """
 }
 
+// args = " --mask-from-beginning x --mask-from-end x "
+process mask {
+  label 'nextstrain'
+  publishDir "${params.outdir}/${build}", mode: 'copy'
+  input: tuple val(build), path(sequence), path(mask), val(args)
+  output: tuple val(build), path("${sequence.simpleName}_masked.fasta")
+  script:
+  """
+  ${augur_app} mask \
+      --sequences ${sequence} \
+      --mask ${mask} \
+      --output ${sequence.simpleName}_masked.fasta \
+      ${args}
+  """
+}
+
 // args=""
 process tree {
   label 'nextstrain'

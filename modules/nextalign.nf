@@ -51,6 +51,21 @@ process nextalign {
   """
 }
 
+process nextalign_run {
+  publishDir "${params.outdir}/${build}", mode: 'copy'
+  input: tuple val(build), path(sequences), path(reference), val(args)
+  output: tuple val(build), path("aligned.fasta")
+  script:
+  """
+  #! /usr/bin/env bash
+  # Pull gene names from gff file
+  ${nextalign_app} run \
+    --sequences ${sequences} \
+    --reference ${reference} \
+    --output-fasta aligned.fasta \
+    ${args}
+  """
+}
 
 
 workflow nextalign_example_pipe {
