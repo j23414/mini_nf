@@ -340,6 +340,38 @@ process export_rsv {
     """
 }
 
+// args = "--include-root-sequence"
+process export_mkpx {
+    label 'nextstrain'
+    publishDir("${params.outdir}/${build}"), mode: 'copy'
+    input: tuple val(build), path(tree), path(metadata), \
+      path(node_data), \
+      path(colors), \
+      path(lat_longs), \
+      path(description) \
+      path(auspice_config) \
+      val(args)
+    output: tuple val(build), path("auspice")
+    script:
+    """
+    ${augur_app} export v2 \
+        --tree ${tree} \
+        --metadata ${metadata} \
+        --node-data ${node_data} \
+        --colors ${colors} \
+        --lat-longs ${lat_longs} \
+        --description ${description} \
+        --auspice-config ${auspice_config} \
+        --output auspice/${tree.simpleName}.json \
+        ${args}
+    """
+    stub:
+    """
+    mkdir auspice
+    touch auspice/${tree.simpleName}.json
+    """
+}
+
 // TODO: other Augur commands
 // process parse { }
 // process mask { }

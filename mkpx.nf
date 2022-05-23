@@ -7,7 +7,7 @@ nextflow.enable.dsl=2
 // params.metadata="data/metadata.tsv"
 
 /* Import generalized processes */
-include { parse; index; filter2 as filter; mask; tree; refine; ancestral; translate; traits; export_rsv as export } from './modules/augur.nf'
+include { parse; index; filter2 as filter; mask; tree; refine; ancestral; translate; traits; export_mkpx as export } from './modules/augur.nf'
 //include { mafft } from './modules/fasttree.nf'
 
 include { nextalign_run as align } from './modules/nextalign.nf'
@@ -60,9 +60,44 @@ workflow {
   | tree
   | join(mask.out)
   | combine(met_ch)
-  | combine(channel.of(" --timetree --root min_dev --clock-rate 5e-6 --clock-std-dev 3e-6 --coalescenct opt --date-inference marginal --clock-filter-iqd 10"))
-//  | refine
+  | combine(channel.of(" --timetree --root min_dev --clock-rate 5e-6 --clock-std-dev 3e-6 --coalescent opt --date-inference marginal --clock-filter-iqd 10"))
+  | refine
   | view
+
+  refine_tree_ch = refine.out | map {n -> [n.get(0), n.get(1)]}
+  branch_lengths_ch = refine.out | map {n -> [n.get(0), n.get(2)]}
+
+  refine_tree_ch
+  | join(mask.out)
+  | combine(channel.of(" --inference joint "))
+  | ancestral
+
+  refine_tree_ch
+  | join(ancestral.out)
+  | combine(refg_ch)
+  | translate
+
+  refine_tree_ch
+  | combine(met_ch) 
+  | combine(channel.of(" --columns country --confidence --sampling-bias-correction 3 "))
+  | traits
+
+  nodedata_ch = branch_lengths_ch
+  | join(ancestral.out)
+  | join(translate.out)
+  | join(traits.out)
+  | map{ n -> [n.get(0), [n.get(1), n.get(2), n.get(3), n.get(4)]]}
+
+  refine_tree_ch
+  | combine(met_ch)
+  | combine(nodedata_ch)
+  | combine(col_ch) 
+  | combine(ll_ch) 
+  | combine(des_ch)
+  | combine(ausp_ch)
+  | combine(channel.of(" --include-root-sequence "))
+  | export
+  
 }
 
 // [db/bacc20] process > mkpx_files [100%] 1 of 1 ✔
