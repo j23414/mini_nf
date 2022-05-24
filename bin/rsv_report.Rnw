@@ -1,0 +1,61 @@
+\documentclass{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[margin=0.5in,top=1in,bottom=0.75in]{geometry}
+\usepackage{amsmath}
+\usepackage{booktabs}
+\usepackage{longtable}
+
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\lhead{Fred Hutch: \today}
+\chead{RSV}
+\rhead{...}
+
+\begin{document}
+
+<<,echo=FALSE>>=
+opts_chunk$set(fig.width=4,fig.height=3,size="footnotesize",fig.align='center')
+@
+
+<<, echo=FALSE, message=FALSE, warning=FALSE>>=
+setwd("/Users/jenchang/github/j23414/mini_nf/") # generalize later
+data_file = "data/metadata.tsv"
+
+library(tidyverse)
+library(magrittr)
+
+data <- readr::read_delim(data_file, delim="\t")
+@
+
+\section*{RSV Summary = \Sexpr{dim(data)}}
+
+<<>>=
+head(data) %>%
+  head(., n=10) %>%
+  knitr::kable(., booktabs=T)
+  
+data %>%
+  group_by(species) %>%
+  summarize(n=n()) %>%
+  head(., n=10) %>%
+  knitr::kable(., booktabs=T)
+@
+
+There're problematic strain names like "B1"
+
+<<>>=
+problematic = c("B1", "A")
+data %>%
+  subset(strain %in% problematic) %>%
+  head(.) %>%
+  mutate(
+    genbank=substr(genbank, 0,20),
+    date=substr(date, 0,20)
+  ) %>%
+  knitr::kable(., booktabs=T)
+@
+
+
+
+\end{document}
