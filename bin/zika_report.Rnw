@@ -1,0 +1,72 @@
+\documentclass{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[margin=0.5in,top=1in,bottom=0.75in]{geometry}
+\usepackage{amsmath}
+\usepackage{booktabs}
+\usepackage{longtable}
+
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\lhead{Fred Hutch: \today}
+\chead{Zika}
+\rhead{Jennifer Chang}
+
+\begin{document}
+
+<<,echo=FALSE>>=
+opts_chunk$set(fig.width=4,fig.height=3,size="footnotesize",fig.align='center')
+@
+
+<<, echo=FALSE, message=FALSE, warning=FALSE>>=
+setwd("/Users/jenchang/github/j23414/local") # generalize later
+zika_data = "zika_results/zika_metadata.tsv.xlsx"
+
+library(tidyverse)
+library(magrittr)
+
+data <- readxl::read_excel(zika_data)
+@
+
+\section*{Zika Summary = \Sexpr{dim(data)}}
+
+<<>>=
+head(data)
+unique(data$genotype)
+
+data %>%
+  group_by(genotype) %>%
+  summarize(n=n())
+@
+
+
+\begin{itemize}
+\item{Genbank Counts:}
+\item{genotype asian counts:}
+\end{itemize}
+
+
+
+<<>>=
+
+data %>%
+  group_by(host) %>%
+  summarize(n=n()) %>%
+  knitr::kable(., booktabs=T)
+
+data %>%
+  group_by(country) %>%
+  summarize(n=n())  %>%
+  head(.) %>%
+  knitr::kable(., booktabs=T)
+@
+
+\section{Flagged Entries}
+
+<<>>= 
+fdata <- data %>% subset(check==TRUE)
+fdata %>% knitr::kable(., booktabs=T)
+@
+
+
+\end{document}
