@@ -102,6 +102,18 @@ workflow ZIKA_EXAMPLE_PIPE {
     export.out
 }
 
+process fetch_fixes {
+  output: tuple path("zika_strain_name_fix.tsv"), path("zika_date_fix.tsv"), path("zika_location_fix.tsv")
+  shell:
+  """
+  #! /usr/bin/env bash
+  #! /usr/bin/env bash
+  wget -O master.zip https://github.com/nextstrain/fauna/archive/refs/heads/master.zip
+  unzip master.zip
+  mv fauna-master/source-data/zika* .
+  """
+}
+
 process get_metadata {
   input: tuple path(fasta), val(filename)
   output: path("$filename")
@@ -163,6 +175,9 @@ process merge_metadata {
 }
 
 workflow {
+
+  fixzika_ch=fetch_fixes ()
+  fixzika_ch | view
   
   //ZIKA_EXAMPLE_PIPE() 
   channel.of("family=flavi&species=Zika%20virus&fromyear=2013&minlength=5000")           // vipr query
@@ -173,7 +188,7 @@ workflow {
     | get_metadata
     | combine(channel.of("zika_metadata.tsv"))
     | merge_metadata
-    | view
+//    | view
 
 // (nextstrain) local % nextflow run ../mini_nf/zika.nf --outdir zika_results -resume
 // N E X T F L O W  ~  version 21.10.6
