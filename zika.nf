@@ -1,6 +1,7 @@
 #! /usr/bin/env nextflow
 nextflow.enable.dsl=2
 
+include {vipr_fetch} from "./modules/vipr.nf"
 include { index; filter; align; tree; refine; ancestral; translate; traits; export } from './modules/augur.nf'
 
 process pull_zika {
@@ -101,6 +102,97 @@ workflow ZIKA_EXAMPLE_PIPE {
     export.out
 }
 
+process get_metadata {
+  input: tuple path(fasta), val(filename)
+  output: path("$filename")
+  script: 
+  """
+  #! /usr/bin/env bash 
+  echo "genbank,strain,date,host,country,genotype,species,len" \
+    | tr ',' '\t' \
+    > ${filename}
+  smof stat -lq ${fasta} \
+    | tr '|' '\t' \
+    >> ${filename}
+  """ 
+}
+
+process merge_metadata {
+  input: tuple path(metadata_tsv), val(filename)
+  output: tuple path("$filename"), path("${filename}.xlsx")
+  script:
+  """
+  #! /usr/bin/env Rscript
+  library(tidyverse)
+  library(magrittr)
+
+  data <- readr::read_delim("${metadata_tsv}", delim="\t")
+
+  uniqMerge <- function(vc, delim = ",") {
+    vc <- vc %>%
+    na.omit(.) %>%
+    unique(.) %>%
+    paste(., collapse = delim, sep = "")
+    if (grepl(delim, vc)) {
+      vc <- vc %>%
+        stringr::str_split(., delim, simplify = T) %>%
+        as.vector(.) %>%
+        unique(.) %>%
+        paste(., collapse = delim, sep = "")
+    }
+    return(vc)
+  }
+
+  cdata <- data %>%
+    dplyr::group_by(strain) %>%
+    dplyr::summarize(
+      date = date %>% uniqMerge(.), 
+      genbank = genbank %>% uniqMerge(.),
+      host = host %>% uniqMerge(.),
+      country = country %>% uniqMerge(.),
+      genotype = genotype %>% uniqMerge(.),
+      species = species %>% uniqMerge(.),
+      len = len %>% uniqMerge(.),
+      check = grepl(",", genbank)
+    ) %>% 
+    dplyr::select(c("date", "genbank", "strain","genotype", "host", "country", "len", "species","check"))
+
+  readr::write_delim(cdata, "$filename", delim="\t")
+  writexl::write_xlsx(cdata, "${filename}.xlsx")
+  """
+}
+
 workflow {
-  ZIKA_EXAMPLE_PIPE()
+  
+  //ZIKA_EXAMPLE_PIPE() 
+  channel.of("family=flavi&species=Zika%20virus&fromyear=2013&minlength=5000")           // vipr query
+    | combine(channel.of("genbank,strainname,date,host,country,genotype,species")) // vipr metadata
+    | combine(channel.of("vipr_zika.fasta"))
+    | vipr_fetch
+    | combine(channel.of("vipr_zika_metadata.tsv"))
+    | get_metadata
+    | combine(channel.of("zika_metadata.tsv"))
+    | merge_metadata
+    | view
+
+// (nextstrain) local % nextflow run ../mini_nf/zika.nf --outdir zika_results -resume
+// N E X T F L O W  ~  version 21.10.6
+// Launching `../mini_nf/zika.nf` [dreamy_mendel] - revision: bd62170581
+// executor >  local (1)
+// executor >  local (1)
+// [ee/3ef744] process > vipr_fetch (1)     [100%] 1 of 1, cached: 1 ✔
+// [23/ae87a0] process > get_metadata (1)   [100%] 1 of 1, cached: 1 ✔
+// [ca/0b201e] process > merge_metadata (1) [100%] 1 of 1 ✔
+// [/Users/jenchang/github/j23414/local/work/ca/0b201e484e3d2edd97d8f455bd931f/zika_metadata.tsv, /Users/jenchang/github/j23414/local/work/ca/0b201e484e3d2edd97d8f455bd931f/zika_metadata.tsv.xlsx]
+
+// === Potentially problematic strains, or at least multiple genbanks
+// 15098
+// Natal_RGN
+// PE243                 # <= conflicting dates (2015-05-13, 2017-06-29)
+// PF13/251013-18
+// PRVABC59
+// S-542/Yucatan/2017
+// SZ-WIV01
+// ZIKV/Homo_sapiens/PAN/CDC-259249_V1-V3/2015
+// ZJ03
 }
