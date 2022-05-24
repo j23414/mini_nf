@@ -11,7 +11,7 @@ workflow {
    | flatten
    | combine(channel.of(segments)| flatten)
    | combine(channel.of(time)| flatten)
-   | view
+   | view // Then pipe into the standard pipeline
 }
 
 // N E X T F L O W  ~  version 21.10.6

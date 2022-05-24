@@ -4,7 +4,7 @@ nextflow.enable.dsl=2
 
 /* include nf modules */
 
-include { vipr_fetch_rsv } from './modules/vipr.nf'
+include { vipr_fetch } from './modules/vipr.nf'
 include {format_downloaded_genomes; label_rsv_subtypes} from './modules/wrap_bin.nf'
 include { parse; index; filter2 as filter; align; tree; refine; ancestral; translate; traits; export_rsv as export } from './modules/augur.nf'
 include { mafft } from './modules/fasttree.nf'
@@ -51,8 +51,11 @@ workflow {
   description_ch = config_ch | map {n -> n.get(3)}
 
   /* eventually fetch from api, instead of manual process */
-  channel.of("vipr_download.fasta")
-   | vipr_fetch_rsv
+  channel.of("family=pneumoviridae")
+  // channel.of("family=pneumoviridae&species=Respiratory%20syncytial%20virus")
+   | combine(channel.of("genbank,strainname,segment,date,host,country,genotype,species"))
+   | combine(channel.of("vipr_download.fasta"))
+   | vipr_fetch
    | subset_to_small
   /* read from param */
   // channel.fromPath("./data/vipr_download.fasta")
@@ -76,9 +79,9 @@ workflow {
    | refine
 
   /* alternative metadata route */
-  vipr_fetch_rsv.out 
-   | combine(channel.of("rsv_headersAndLengths.tsv"))
-   | smof_length
+  //vipr_fetch.out 
+  // | combine(channel.of("rsv_headersAndLengths.tsv"))
+  // | smof_length
    // | wrapped metadata merge, cache old values, flag entries for manual curation
 
   refine_tree_ch = refine.out | map {n -> [n.get(0), n.get(1)]}
