@@ -56,6 +56,26 @@ data %>%
   knitr::kable(., booktabs=T)
 @
 
+\section{genotypes}
+
+Placeholder for later
+
+<<, fig.width=8, fig.height=3>>=
+data %>%
+  mutate(
+    year=substr(date, 0,4),
+    genotype = case_when(grepl("RSV_A", genotype)~ "A",
+                         grepl("RSV_B", genotype)~ "B",
+                         1==1 ~ genotype)
+  ) %>%
+  subset(!is.na(year)) %>%
+  ggplot(., aes(x=year, fill=genotype)) +
+  geom_bar() +
+  theme_bw() +
+  theme(axis.text.x = element_text(angle=45))+
+  labs(title="genotypes")
+@
+
 
 
 \end{document}

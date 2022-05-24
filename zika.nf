@@ -157,7 +157,7 @@ process merge_metadata {
 
   fixStrainNames <- function(name){
     new_name = gsub("Homo_Sapiens","Homo_sapiens", name) %>%
-      gsub("ZIKA/","", .) %>% 
+      #gsub("ZIKA/","", .) %>% 
       gsub("^PRVABC_59\$", "ZIKV/Homo_sapiens/PRI/PRVABC59/2015", .) %>%
       gsub("^PRVABC59\$", "ZIKV/Homo_sapiens/PRI/PRVABC59/2015", .) %>% 
       gsub("Zika_virus/H.sapiens-tc/Puerto_Rico/2015/PRVABC59", "ZIKV/Homo_sapiens/PRI/PRVABC59/2015", .)

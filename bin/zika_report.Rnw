@@ -68,5 +68,22 @@ fdata <- data %>% subset(check==TRUE)
 fdata %>% knitr::kable(., booktabs=T)
 @
 
+\section{genotypes}
+
+Placeholder for later
+
+<<, fig.width=8, fig.height=3>>=
+data %>%
+  mutate(
+    year=substr(date, 0,4)
+  ) %>%
+  subset(!is.na(year)) %>%
+  ggplot(., aes(x=year, fill=genotype)) +
+  geom_bar() +
+  theme_bw() +
+  theme(axis.text.x = element_text(angle=45, hjust=1))+
+  labs(title="genotypes")
+@
+
 
 \end{document}
