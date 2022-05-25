@@ -82,3 +82,16 @@ process plot_the_global_distribution_of_all_sequences {
   ./plot-the-global-distribution-of-all-sequences.R
   """
 }
+
+// mkpx
+// https://github.com/nextstrain/monkeypox/blob/lapis2/workflow/snakemake_rules/download_via_lapis.smk
+process lapis_mkpx {
+  output: tuple path("sequences.fasta"), path("metadata.tsv")
+  script:
+  """
+  curl https://mpox-lapis.gen-spectrum.org/v1/sample/fasta --output sequences.fasta
+  curl https://mpox-lapis.gen-spectrum.org/v1/sample/details?dataFormat=csv | \
+    tr -d "\r" |
+    sed -E 's/("([^"]*)")?,/\\2\\t/g' > metadata.tsv
+  """
+}

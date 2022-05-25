@@ -9,6 +9,7 @@ nextflow.enable.dsl=2
 /* Import generalized processes */
 include { parse; filter2 as filter; mask; tree; refine; ancestral; translate; traits; export_mkpx as export } from './modules/augur.nf'
 include { nextalign_run as align } from './modules/nextalign.nf'
+include {lapis_mkpx} from './modules/lapis.nf'
 
 /* Bespoke processes */
 process mkpx_files {
@@ -28,7 +29,7 @@ workflow {
   mkpx_ch = mkpx_files()
   //mkpx_ch | view
   // [/Users/jenchang/github/j23414/mini_nf/work/db/bacc2018cfb08428669fe6f75a73b8/sequences.fasta, /Users/jenchang/github/j23414/mini_nf/work/db/bacc2018cfb08428669fe6f75a73b8/outbreak.fasta, /Users/jenchang/github/j23414/mini_nf/work/db/bacc2018cfb08428669fe6f75a73b8/metadata.tsv, /Users/jenchang/github/j23414/mini_nf/work/db/bacc2018cfb08428669fe6f75a73b8/auspice_config.json, /Users/jenchang/github/j23414/mini_nf/work/db/bacc2018cfb08428669fe6f75a73b8/colors.tsv, /Users/jenchang/github/j23414/mini_nf/work/db/bacc2018cfb08428669fe6f75a73b8/description.md, /Users/jenchang/github/j23414/mini_nf/work/db/bacc2018cfb08428669fe6f75a73b8/exclude.txt, /Users/jenchang/github/j23414/mini_nf/work/db/bacc2018cfb08428669fe6f75a73b8/genemap.gff, /Users/jenchang/github/j23414/mini_nf/work/db/bacc2018cfb08428669fe6f75a73b8/lat_longs.tsv, /Users/jenchang/github/j23414/mini_nf/work/db/bacc2018cfb08428669fe6f75a73b8/mask.bed, /Users/jenchang/github/j23414/mini_nf/work/db/bacc2018cfb08428669fe6f75a73b8/reference.fasta, /Users/jenchang/github/j23414/mini_nf/work/db/bacc2018cfb08428669fe6f75a73b8/reference.gb]
-
+  lapis_ch = lapis_mkpx()
 
   seq_ch = mkpx_ch | map{ n -> n.get(0) }
   // add a merge
