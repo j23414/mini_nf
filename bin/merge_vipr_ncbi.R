@@ -3,47 +3,78 @@
 library(tidyverse)
 library(magrittr)
 
-data<-readr::read_delim("vipr_metadata.tsv", delim="\t")
+# === Inputs
+VIPR_FILE="vipr.tsv"
+NCBI_FILE="ncbi.csv"
 
-# cdata <- data %>%
-#   mutate(
-#     date = case_when(str_length(date) < 5 ~ paste(date,"-XX-XX", sep=""),
-#                      str_length(date) < 8 ~ paste(date,"-XX", sep=""),
-#                    1==1~ date),
-#     genotype = case_when(str_length(genotype)>0 ~ genotype,
-#                          grepl("RSVA", strain) ~ "A",
-#                          grepl("RSVB", strain) ~ "B",
-#                          grepl("RSV_A", strain) ~ "A",
-#                          grepl("RSV_B", strain) ~ "B",
-#                          grepl("/A$", strain) ~ "A",
-#                          grepl("/B$", strain) ~ "B")
-#   )
-# readr::write_delim(cdata, "temp.txt", delim="\t")
-# names(cdata)
+vipr <- readr::read_delim(VIPR_FILE, delim="\t")
+ncbi <- readr::read_delim(NCBI_FILE, delim=",")
 
-ncbi <- readr::read_delim("ncbi.csv", delim=",")
+(names(vipr) = gsub(" ","_", names(vipr)))
 
-cncbi <- ncbi %>%
+# === same column names, could also melt
+fncols <- function(data, cname) {
+  add <- cname[!cname %in% names(data)]
+  if (length(add) != 0) data[add] <- NA
+  data
+}
+
+# specific renaming
+cncbi <- ncbi %>% 
+  fncols(., names(vipr)) %>%
   mutate(
     genbank=Accession,
-    strain=Isolate,
+    strain=Isolate %>% gsub(" ", "_", .),
     segment=Segment,
     date=Collection_Date,
-    host=Host,
+    host=Host %>% gsub("Homo sapiens","Human", .),
     country=Country,
     genotype=Genotype,
     species=Species,
     length=Length
+  )
+
+format_date <- function(vc, delim="/"){
+  if (grepl(delim, vc)) {
+    vc_temp <- vc %>%
+      stringr::str_split(., delim, simplify = T) %>%
+      as.vector(.) 
+    if(length(vc_temp)==3){
+      vc <- vc_temp %>% 
+        { c(.[3], .[1], .[2]) } %>%
+        paste(., collapse = "-", sep = "")
+    }
+    if(length(vc_temp)==2){
+      vc <- vc_temp %>% 
+        { c(.[2], .[1] ) } %>%
+        paste(., collapse = "-", sep = "")
+    }
+
+    return(vc)
+  }
+  return(vc)
+}
+
+
+cvipr <- vipr %>% 
+  fncols(., names(ncbi)) %>%
+  group_by(GenBank_Accession) %>%
+  mutate(
+    genbank=GenBank_Accession,
+    strain=Strain_Name %>% gsub(" ", "_",.),
+    segment="",
+    date=Collection_Date %>% gsub("-N/A-", "", .) %>% format_date(., delim="/"),
+    host=Host,
+    country=Country,
+    genotype=Pango_Genome_Lineage %>% gsub("-N/A-","", .),
+    species=Virus_Species,
+    length=Sequence_Length
   ) %>%
-  select(c("genbank", "strain", "segment", "date", "host", "Isolation_Source", "country","Geo_Location", "genotype", "species", "length", "SRA_Accession","GenBank_Title"))
+  ungroup(.)
 
+# head(cvipr$date)
 
-data$Isolation_Source=""
-data$Geo_Location=""
-data$SRA_Accession=""
-data$GenBank_Title=""
-
-cdata <- data %>% select(c("genbank", "strain", "segment", "date", "host", "Isolation_Source", "country","Geo_Location", "genotype", "species", "length", "SRA_Accession","GenBank_Title"))
+# === Functions
 
 uniqMerge <- function(vc, delim = ",") {
   vc <- vc %>%
@@ -60,7 +91,9 @@ uniqMerge <- function(vc, delim = ",") {
   return(vc)
 }
 
-all = rbind(cdata, cncbi) %>%
+#cdata <- data %>% select(c("genbank", "strain", "segment", "date", "host", "Isolation_Source", "country","Geo_Location", "genotype", "species", "length", "SRA_Accession","GenBank_Title"))
+
+all = rbind(cvipr, cncbi) %>%
   group_by(genbank) %>%
   summarize(
     strain=strain %>% uniqMerge(.),
@@ -75,8 +108,9 @@ all = rbind(cdata, cncbi) %>%
     length = length %>% uniqMerge(.),
     SRA_Accession = SRA_Accession %>% uniqMerge(.),
     GenBank_Title = GenBank_Title %>% uniqMerge(.),
-    check=grepl(",", strain) # flag vague strain names
+    check=grepl(",", strain), # flag vague strain names
+    LEN=as.numeric(length)
   )
 
-readr::write_delim(all, vipr_ncbi.tsv, delim="\t")
+readr::write_delim(all, "vipr_ncbi.tsv", delim="\t")
 writexl::write_xlsx(all, "vipr_ncbi.xlsx")
