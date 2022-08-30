@@ -95,3 +95,24 @@ process lapis_mkpx {
     sed -E 's/("([^"]*)")?,/\\2\\t/g' > metadata.tsv
   """
 }
+
+process download_sequences_via_lapis {
+  publishDir "${params.outdir}/data"
+  output: path("sequences.fasta")
+  script:
+  """
+  curl https://mpox-lapis.genspectrum.org/v1/sample/fasta --output sequences.fasta
+  """
+}
+
+process download_metadata_via_lapis {
+  publishDir "${params.outdir}/data"
+  output: path("metadata.tsv")
+  script:
+  """
+  curl https://mpox-lapis.genspectrum.org/v1/sample/details?dataFormat=csv \
+  | tr -d "\r" \
+  | sed -E 's/("([^"]*)")?,/\\2\\t/g' \
+  > metadata.tsv
+  """
+}

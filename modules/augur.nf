@@ -2,7 +2,6 @@
 
 nextflow.enable.dsl=2
 
-// ==== Individual Processes
 // fasta_fields="strain strain_name segment date host country subtype virus"
 process parse {
   label 'nextstrain'
@@ -39,8 +38,7 @@ process index {
 }
 
 // args = "--group-by country year month --sequences-per-group 20 --min-date 2012"
-// tuple val(build), path(metadata), path(exclude), path(sequences), path(sequence_index)
-process filter {
+process filter_with_index {
   label 'nextstrain'
   publishDir "${params.outdir}/${build}", mode: 'copy'
   input: tuple val(build), path(sequences), path(sequence_index), path(metadata), path(exclude), val(args)
@@ -61,7 +59,7 @@ process filter {
   """
 }
 
-process filter2 {
+process filter {
   label 'nextstrain'
   publishDir "${params.outdir}/${build}", mode: 'copy'
   input: tuple val(build), path(sequences), path(metadata), path(exclude), val(args)
@@ -136,7 +134,7 @@ process tree {
   """
 }
 
-// Hmm figure out arguments string and connecting passed files, this is a hack for now
+// Input tuples should be replaced with Maps eventually
 process tree_with_exclude {
   label 'nextstrain'
   publishDir "${params.outdir}/${build}", mode: 'copy'
@@ -259,7 +257,7 @@ process traits {
     """
 }
 
-// To make this general purpose, just take a collection of json files, don't split it out
+// node_data = ["nt_muts.json", "aa_muts.json", "traits.json"]
 process export {
     label 'nextstrain'
     publishDir("${params.outdir}/${build}"), mode: 'copy'
@@ -373,7 +371,6 @@ process export_mkpx {
 }
 
 // TODO: other Augur commands
-// process parse { }
 // process mask { }
 // process reconstruct-sequences { }
 // process clade { }

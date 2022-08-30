@@ -4,11 +4,11 @@ nextflow.enable.dsl=2
 
 /* include nf modules */
 
-include { vipr_fetch } from './modules/vipr.nf'
-include {format_downloaded_genomes; label_rsv_subtypes} from './modules/wrap_bin.nf'
-include { parse; index; filter2 as filter; align; tree; refine; ancestral; translate; traits; export_rsv as export } from './modules/augur.nf'
-include { mafft } from './modules/fasttree.nf'
-include {stat_length as smof_length} from './modules/smof.nf'
+include { vipr_fetch } from '../modules/vipr.nf'
+include {format_downloaded_genomes; label_rsv_subtypes} from '../modules/wrap_bin.nf'
+include { parse; index; filter2 as filter; align; tree; refine; ancestral; translate; traits; export_rsv as export } from '../modules/augur.nf'
+include { mafft } from '../modules/fasttree.nf'
+include {stat_length as smof_length} from '../modules/smof.nf'
 
 /* include config files from repo */
 /* dropped_strains.txt is empty */
