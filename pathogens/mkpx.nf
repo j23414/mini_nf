@@ -418,7 +418,7 @@ workflow {
   metadata_ch = input_ch | map { n->n.get(1)}
 
   // 2) Pull config files
-  config_ch = get_monkeypox_configs()
+  get_monkeypox_configs()
   config_dir_ch = get_monkeypox_configs.out | map {n -> n.get(0)}
 
   get_monkeypox_configs.out 
