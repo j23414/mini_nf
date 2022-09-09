@@ -1,4 +1,6 @@
 #! /usr/bin/env bash
+# AUTH: Jennifer Chang
+# DATE: 2022/01/26
 
 # input.fasta
 INPUT=$1
