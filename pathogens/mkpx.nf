@@ -25,7 +25,7 @@ process build_monkeypox {
   unzip master.zip
   cd monkeypox-master
   nextstrain build --cpus 1 . --configfile config/config_mpxv.yaml
-  #nextstrain build --cpus 1 . --configfile config/config_hmpxv1.yaml
+  nextstrain build --cpus 1 . --configfile config/config_hmpxv1.yaml
   """
 }
 
@@ -33,7 +33,7 @@ process build_monkeypox {
 
 process get_monkeypox_configs {
   publishDir "${params.outdir}"
-  output: tuple path("config"), path("config/config_*.yaml")
+  output: tuple path("config/config_*.yaml"), path("config")
   script:
   """
   wget -O master.zip https://github.com/nextstrain/monkeypox/archive/refs/heads/master.zip
@@ -96,13 +96,18 @@ process map_filter {
   script:
   def filters = "${config_map.filters}" != "null" ? "${config_map.filters}" : ''
   """
+  # Turns out snakemake yaml reader doesn't quite format collections correctly
+  clean_format() {
+    echo \$1 | tr '[' ' ' | tr ']' ' ' | tr ',' ' '
+  }
+
   augur filter \
   --sequences ${sequences} \
   --metadata ${metadata} \
   --exclude ${config_map['exclude']} \
   --output-sequences ${sequences.simpleName}_filtered.fasta \
   --output-metadata ${metadata.simpleName}_filtered.tsv \
-  --group-by ${config_map['group_by']} \
+  --group-by `clean_format ${config_map['group_by']} ` \
   --sequences-per-group ${config_map['sequences_per_group']} \
   --min-date ${config_map['min_date']} \
   --min-length ${config_map['min_length']} \
@@ -132,6 +137,11 @@ process map_align {
   output: tuple val(config_map), path(config), path("${sequences.simpleName}_aligned.fasta"), path(metadata), path("${sequences.simpleName}_insertions.fasta")
   script:
   """
+    # Turns out snakemake yaml reader doesn't quite format collections correctly
+  clean_format() {
+    echo \$1 | tr '[' ' ' | tr ']' ' ' | tr ',' ' '
+  }
+  
   nextalign run \
   --jobs `nproc` \
   --genemap ${config_map['genemap']} \
