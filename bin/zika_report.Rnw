@@ -13,14 +13,15 @@
 \rhead{Jennifer Chang}
 
 \begin{document}
+\SweaveOpts{concordance=TRUE}
 
 <<,echo=FALSE>>=
 opts_chunk$set(fig.width=4,fig.height=3,size="footnotesize",fig.align='center')
 @
 
 <<, echo=FALSE, message=FALSE, warning=FALSE>>=
-setwd("/Users/jenchang/github/j23414/local") # generalize later
-zika_data = "zika_results/zika_metadata.tsv.xlsx"
+setwd("~/Desktop/PATHOGENS/ZIKA") # generalize later
+zika_data = "zika..xlsx"
 
 library(tidyverse)
 library(magrittr)

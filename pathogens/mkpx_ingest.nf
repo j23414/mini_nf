@@ -16,11 +16,13 @@ def load_snakemake_yaml(filepath) {
 
 process get_monkeypox_ingest_configs {
   publishDir "${params.outdir}"
-  output: tuple path("monkeypox-master/ingest/config/config.yaml"), path("monkeypox-master/ingest/source-data")
+  output: tuple path("config/config.yaml"), path("source-data")
   script:
   """
   wget -O master.zip https://github.com/nextstrain/monkeypox/archive/refs/heads/master.zip
   unzip master.zip
+  mv monkeypox-master/ingest/config .
+  mv monkeypox-master/ingest/source-data .
   """
 }
 
@@ -44,7 +46,7 @@ process fetch_from_genbank {
 // https://github.com/nextstrain/monkeypox/blob/0efd08263569d3fdf3ccd061434827782d948bc4/ingest/workflow/snakemake_rules/fetch_sequences.smk#L25
 
 process fetch_general_geolocation_rules {
-  publishDir "${params.outdir}/data"
+  publishDir "${params.outdir}/data", pattern: "general-geolocation-rules.tsv"
   input: tuple val(config_map), path(source_data)
   output: tuple val(config_map), path(source_data), path("general-geolocation-rules.tsv")
   script:
@@ -54,7 +56,7 @@ process fetch_general_geolocation_rules {
 }
 
 process concat_geolocation_rules {
-  publishDir "${params.outdir}/data"
+  publishDir "${params.outdir}/data", pattern: "all-geolocation-rules.tsv"
   input: tuple val(config_map), path(source_data), path(general_geolocation_rules)
   output: tuple val(config_map), path(source_data), path("all-geolocation-rules.tsv")
   script:
@@ -64,7 +66,8 @@ process concat_geolocation_rules {
 }
 
 process transform {
-  publishDir "${params.outdir}/data"
+  publishDir "${params.outdir}/data", pattern: "sequences.fasta"
+  publishDir "${params.outdir}/data", pattern: "metadata_raw.tsv"
   input: tuple val(config_map), path(source_data), path(all_geolocation_rules), path(sequences_ndjson)
   output: tuple val(config_map), path(source_data), path("sequences.fasta"), path("metadata_raw.tsv")
   script:
@@ -158,7 +161,7 @@ process transform {
 }
 
 process nextclade_dataset {
-  publishDir "${params.outdir}"
+  publishDir "${params.outdir}/nextclade"
   input: val(dataset_name)
   output: path("*.zip")
   script:
@@ -174,15 +177,16 @@ process nextclade_dataset {
 process nextclade_align {
   publishDir "${params.outdir}/data"
   input: tuple val(config_map), path(source_data), path(sequences), path(metadata), path(dataset)
-  output: tuple val(config_map), path(source_data), path("sequences"), path(metadata), path("insertions.csv"), path("translations.zip")
+  output: tuple val(config_map), path(source_data), path("alignment_aln.fasta"), path(metadata), path("insertions.csv"), path("translations.zip")
   script:
   """
+  mkdir -p data/translations
   nextclade run \
     -D ${dataset} \
     -j `nproc` \
     --retry-reverse-complement \
     --output-fasta alignment_aln.fasta \
-    --output-translations {params.translations} \
+    --output-translations 'data/translations/{gene}.fasta' \
     --output-insertions insertions.csv \
     ${sequences}
 
@@ -191,19 +195,27 @@ process nextclade_align {
 }
 
 workflow {
+  /* Fetch precomputed nextclade */
+  channel.of("MPXV", "hMPXV")
+  | nextclade_dataset
+
+  /* Fetch all mkpx sequences from genbank */
   genbank_ch = fetch_from_genbank()
 
+  /* Fetch mkpx workflow config and source-data files */
   get_monkeypox_ingest_configs()
 
+  /* Start workflow */
   get_monkeypox_ingest_configs.out 
     | map { n -> [load_snakemake_yaml(n.get(0).toString()), n.get(1)] } 
     | fetch_general_geolocation_rules
     | concat_geolocation_rules
     | combine(genbank_ch)
     | transform
+    | combine(nextclade_dataset.out)
+    | nextclade_align
     | view
 
-  channel.of("MPXV", "hMPXV")
-  | nextclade_dataset
+
 }
 
