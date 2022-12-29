@@ -2,6 +2,13 @@
 
 nextflow.enable.dsl=2
 
+// === User could pass in the following params ===
+// params.ncbi_taxon_id='186536'  // --ncbi_taxon_id 186536
+// params.annotations_url='https://raw.githubusercontent.com/nextstrain/ebola/ingest/ingest/source-data/annotations.tsv'  // --annotations_url 'https://raw.githubusercontent.com/nextstrain/ebola/ingest/ingest/source-data/annotations.tsv'
+
+// === Could create local, conda, docker, slurm, terra compute profiles ===
+// -profile local,conda,docker,slurm,terra  
+
 process fetch_from_genbank {
   publishDir "results/ingest/fetch_from_genbank", mode: 'copy'
   input: val(ncbi_taxon_id)
