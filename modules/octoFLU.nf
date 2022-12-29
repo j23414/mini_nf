@@ -9,8 +9,18 @@ process run_octoFLU {
   script:
   """
   #! /usr/bin/env bash
-  wget -O master.zip https://github.com/flu-crew/octoFLU/archive/refs/heads/master.zip
-  unzip master.zip
+  if which wget >/dev/null ; then
+    download_cmd="wget -O"
+  elif which curl >/dev/null ; then
+    download_cmd="curl -fsSL --output"
+  else
+    echo "neither wget nor curl available"
+    exit 1
+  fi
+
+  \$download_cmd octoFLU.zip https://github.com/flu-crew/octoFLU/archive/refs/heads/master.zip
+  
+  unzip octoFLU.zip
   mv ${input_fasta} octoFLU-master/.
   cd octoFLU-master
   bash octoFLU.sh ${input_fasta}

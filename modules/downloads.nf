@@ -2,6 +2,26 @@
 
 nextflow.enable.dsl=2
 
+process download {
+  publishDir "${params.outdir}/downloads", mode: 'copy'
+  input: tuple val(filename), val(url)
+  output: path("${filename}")
+  script:
+  """
+  #! /usr/bin/env bash
+  if which wget >/dev/null ; then
+    download_cmd="wget -O"
+  elif which curl >/dev/null ; then
+    download_cmd="curl -fsSL --output"
+  else
+    echo "neither wget nor curl available"
+    exit 1
+  fi
+
+  \$download_cmd ${filename} ${url}
+  """
+}
+
 // Equivalent to "download_sequences" and "download_metadata"
 // Bit dangerous, should only pull 3 per minute...
 process aws_s3_cp {
