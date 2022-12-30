@@ -1,4 +1,5 @@
 #! /usr/bin/env nextflow
+// Instructions: https://github.com/j23414/mini_nf/wiki/Ingest
 
 nextflow.enable.dsl=2
 
