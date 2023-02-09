@@ -152,22 +152,24 @@ while(<$fh>){
     }elsif(/LOCUS\s+(\S+)/){
 	    $gb=$1;
     }elsif(/gene\s+(\d+)..[>]?(\d+)/){
-	if($start==-1 || $1<$start){
-	    $start=$1;
-	}
-	if($2 > $stop){
-	    $stop=$2;
-	}
-    }elsif(/isolate="(.+)"/){  # This one
+	    if($start==-1 || $1<$start){
+	        $start=$1;
+	    }
+	    if($2 > $stop){
+	        $stop=$2;
+	    }
+    }elsif(/strain="(.+)"/){
 	    $strain=$1;
+    }elsif(/isolate="(.+)"/){  # This one
+        if($strain eq $unknown){
+            $strain=$1;
+        }
     }elsif(/host="(.+)"/){
 	    $host=$1;
     }elsif(/country="(.+)"/){
 	    $col_country=$1;
     }elsif(/isolation_source="(.+)"/){
 	    $iso_source=$1;
-    }elsif(/strain="(.+)"/){
-	    $strain=$1;
     }elsif(/serotype="(.+)"/){
 	    $subtype=$1;
     }elsif(/segment="(.+)"/){
