@@ -13,6 +13,7 @@ nextflow.enable.dsl=2
 //include { wget_url } from './modules/unix.nf'
 
 include {AUGUR_DEFAULTS} from "./modules/augur.nf"
+include {deploy as nextstrain_deploy} from "./modules/nextstrain.nf"
 
 workflow {
 /* TODO: read native snakemake yaml
@@ -51,10 +52,11 @@ workflow {
       colors_ch = Channel.fromPath(params.colors, checkIfExists:true)
       lat_longs_ch = Channel.fromPath(params.lat_longs, checkIfExists:true)
       auspice_config_ch = Channel.fromPath(params.auspice_config, checkIfExists:true)
-  
       build_ch = channel.of("default-build")
 
-      AUGUR_DEFAULTS (
+      s3url_ch = Channel.from(params.s3url)
+
+      auguroutput_ch = AUGUR_DEFAULTS (
         build_ch, 
         sequences_ch, 
         metadata_ch, 
@@ -63,6 +65,12 @@ workflow {
         colors_ch, 
         lat_longs_ch, 
         auspice_config_ch
-      ) 
+      )
+
+      auguroutput_ch 
+      | map { n -> n.get(1) } // get "auspice" folder
+      | combine(s3url_ch)
+      | nextstrain_deploy
+
   //}
 }

@@ -40,6 +40,21 @@ process remote_download {
   """
 }
 
+process deploy {
+  label 'nextstrain'
+  publishDir "${params.outdir}/Uploads", mode: 'copy'
+  input: tuple path(auspice), val(s3url)
+  output: path("upload_done.txt")
+  script:
+  """
+  #! /usr/bin/env bash
+  if [[ -n "$AWS_ACCESS_KEY_ID" && -n "$AWS_SECRET_ACCESS_KEY" ]]; then
+    nextstrain deploy ${s3url} ${auspice}/*.json
+  else
+    echo "no access key" >> upload_done.txt
+  fi
+  """
+}
 // TODO: take input channel create Snakefile and build.yml for nextstrain build
 // process write_Snakefile { }
 // process write_buildyml { }
