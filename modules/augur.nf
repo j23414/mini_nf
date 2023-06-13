@@ -62,7 +62,7 @@ process filter_with_index {
 process filter {
   label 'nextstrain'
   publishDir "${params.outdir}/${build}", mode: 'copy'
-  input: tuple val(build), path(sequences), path(metadata), path(exclude), val(args)
+  input: tuple val(build), path(sequences), path(sequences_index), path(metadata), path(exclude), val(args)
   output: tuple val(build), path("${sequences.simpleName}_filtered.fasta")
   script:
   """
