@@ -44,15 +44,21 @@ process deploy {
   label 'nextstrain'
   publishDir "${params.outdir}", mode: 'copy'
   input: tuple path(auspice), val(s3url)
-  output: path("deployment.log")
+  output: path("*.log")
+  when: params.s3url
   script:
   """
   #! /usr/bin/env bash
-  if [[ -z "$AWS_ACCESS_KEY_ID" || -z "$AWS_SECRET_ACCESS_KEY" ]]; then
-    echo "No deployment credentials found" >> deployment.log
-  else
-    nextstrain deploy ${s3url} ${auspice}/*.json
+  if [[ -z "${params.aws_access_key_id}" ]]; then
+    export AWS_ACCESS_KEY_ID="${params.aws_access_key_id}"
   fi
+  if [[ -z "${params.aws_secret_access_key}" ]]; then
+    export AWS_SECRET_ACCESS_KEY="${params.aws_secret_access_key}"
+  fi
+
+  nextstrain deploy ${s3url} ${auspice}/*.json \
+    || echo "No deployment credentials found" \
+    >> deployment.log
   """
 }
 // TODO: take input channel create Snakefile and build.yml for nextstrain build
