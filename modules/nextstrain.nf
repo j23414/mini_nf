@@ -42,16 +42,16 @@ process remote_download {
 
 process deploy {
   label 'nextstrain'
-  publishDir "${params.outdir}/Uploads", mode: 'copy'
+  publishDir "${params.outdir}", mode: 'copy'
   input: tuple path(auspice), val(s3url)
-  output: path("upload_done.txt")
+  output: path("deployment.log")
   script:
   """
   #! /usr/bin/env bash
-  if [[ -n "$AWS_ACCESS_KEY_ID" && -n "$AWS_SECRET_ACCESS_KEY" ]]; then
-    nextstrain deploy ${s3url} ${auspice}/*.json
+  if [[ -z "$AWS_ACCESS_KEY_ID" || -z "$AWS_SECRET_ACCESS_KEY" ]]; then
+    echo "No deployment credentials found" >> deployment.log
   else
-    echo "no access key" >> upload_done.txt
+    nextstrain deploy ${s3url} ${auspice}/*.json
   fi
   """
 }
