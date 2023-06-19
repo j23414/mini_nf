@@ -62,6 +62,33 @@ process deploy {
     >> deployment.log
   """
 }
+
+// https://github.com/nextstrain/ncov/blob/ce84df93c7774e092e16a55947a4756add80e615/workflow/wdl/tasks/nextstrain.wdl#L3-L142
+process build {
+  label 'nextstrain'
+  publishDir "${params.outdir}", mode: 'copy'
+  input: tuple path(pathogen_giturl), path(sequences), path(metadata), path(config)
+  output: path("auspice")
+  script:
+  """
+  #! /usr/bin/env bash
+  # Example pathogen_giturl https://github.com/nextstrain/zika
+  wget -O main.zip ${pathogen_giturl}
+  INDIR=`unzip -Z1 main.zip | head -n1 | sed 's:/::g'`
+  unzip main.zip
+
+  cp ${sequences} \${INDIR}/.
+  cp ${metadata} \${INDIR}/.
+
+  nextstrain build \
+    --cpus $task.cpus \
+    --native \
+    \$INDIR ${config} \
+
+  mv \${INDIR}/auspice .
+  """
+}
+
 // TODO: take input channel create Snakefile and build.yml for nextstrain build
 // process write_Snakefile { }
 // process write_buildyml { }
