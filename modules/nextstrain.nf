@@ -56,7 +56,8 @@ process deploy {
     export AWS_SECRET_ACCESS_KEY="${params.aws_secret_access_key}"
   fi
 
-  nextstrain deploy ${s3url} ${auspice}/*.json \
+  # https://docs.nextstrain.org/projects/cli/en/stable/commands/remote/upload/
+  nextstrain remote upload ${s3url} ${auspice}/*.json \
     || echo "No deployment credentials found" \
     >> deployment.log
   """
