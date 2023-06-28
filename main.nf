@@ -1,6 +1,7 @@
 #! /usr/bin/env nextflow
 nextflow.enable.dsl=2
 
+// include {build as nextstrain_build } from "./modules/nextstrain.nf" 
 include {AUGUR_DEFAULTS} from "./modules/augur.nf"
 include {deploy as nextstrain_deploy} from "./modules/nextstrain.nf"
 
@@ -16,6 +17,14 @@ workflow {
 
       s3url_ch = Channel.from(params.s3url)
 
+      //pathogen_giturl_ch = channel.from(params.pathogen_giturl)
+//
+      //pathogen_giturl_ch
+      //| combine(sequences_ch)
+      //| combine(metadata_ch)
+      //| nextstrain_build
+      //| view
+
       auguroutput_ch = AUGUR_DEFAULTS (
         build_ch, 
         sequences_ch, 
@@ -29,6 +38,7 @@ workflow {
 
       auguroutput_ch 
       | map { n -> n.get(1) } // get "auspice" folder
+      //nextstrain_build.out
       | combine(s3url_ch)
       | nextstrain_deploy
 
