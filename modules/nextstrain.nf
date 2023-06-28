@@ -49,17 +49,10 @@ process deploy {
   script:
   """
   #! /usr/bin/env bash
-  if [[ -z "${params.aws_access_key_id}" ]]; then
-    export AWS_ACCESS_KEY_ID="${params.aws_access_key_id}"
-  fi
-  if [[ -z "${params.aws_secret_access_key}" ]]; then
-    export AWS_SECRET_ACCESS_KEY="${params.aws_secret_access_key}"
-  fi
-
   # https://docs.nextstrain.org/projects/cli/en/stable/commands/remote/upload/
-  nextstrain remote upload ${s3url} ${auspice}/*.json \
-    || echo "No deployment credentials found" \
-    >> deployment.log
+  ( nextstrain remote upload ${s3url} ${auspice}/*.json \
+    || echo "No deployment credentials found" ) \
+    &> deployment.log
   """
 }
 
